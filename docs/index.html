@@ -529,6 +529,7 @@ function renderAll(){
     return;
   }
   var feats=buildFeatures();
+  console.log('buildFeatures: '+feats.length+' features, expandedCities keys:',Object.keys(expandedCities));
   var md={type:'FeatureCollection',features:feats};
   try{echarts.registerMap('m',md);}catch(e){}
   var regions=feats.map(function(f){var p=f.properties||{};return{a:String(p.adcode||p.id||''),n:p.name||''};}).filter(function(r){return r.n;});
@@ -674,6 +675,7 @@ function handleClick(ca,cn){
   // 市级模式
   if(currentMode==='city'){
     selectedAdcode=ca;
+    console.log('市级点击:',ca,cn);
     var muni={'110000':1,'120000':1,'310000':1,'500000':1};
     var isCity=(ca.substring(2)!=='00'&&ca.substring(4)==='00');
     var isMuni=!!muni[ca];
