@@ -708,11 +708,27 @@ function showDetail(a,n,t){
   if(d.seat)h+='<div class="detail-field"><span class="df-label">驻地</span><span class="df-value">'+d.seat+'</span></div>';
   if(d.sec||d.gov||d.rd||d.cppcc){
     h+='<hr class="detail-divider">';
-    if(d.sec)h+='<div class="detail-field"><span class="df-label">书记</span><span class="df-value">'+d.sec+'</span></div>';
-    if(d.secDep)h+='<div class="detail-field"><span class="df-label">副书记</span><span class="df-value">'+d.secDep+'</span></div>';
-    if(d.gov)h+='<div class="detail-field"><span class="df-label">首长</span><span class="df-value">'+d.gov+'</span></div>';
-    if(d.govDep)h+='<div class="detail-field" style="flex-wrap:wrap"><span class="df-label">副职</span><span class="df-value" style="max-width:65%;text-align:right;word-break:break-all">'+d.govDep+'</span></div>';
-    if(d.rd)h+='<div class="detail-field"><span class="df-label">人大主任</span><span class="df-value">'+d.rd+'</span></div>';
+    var secLabel='书记',govLabel='首长';
+    if(t==='province'||levelLabel==='省级'){
+      if(n.indexOf('自治区')>=0||n==='广西'||n==='内蒙古'||n==='西藏'||n==='宁夏'||n==='新疆'){secLabel='自治区党委书记';govLabel='自治区主席';}
+      else if(n.indexOf('市')>=0&&(n.indexOf('北京')>=0||n.indexOf('天津')>=0||n.indexOf('上海')>=0||n.indexOf('重庆')>=0)){secLabel='市委书记';govLabel='市长';}
+      else if(n.indexOf('省')>=0){secLabel='省委书记';govLabel='省长';}
+      else if(n.indexOf('香港')>=0||n.indexOf('澳门')>=0){secLabel='行政长官';govLabel='行政长官';}
+    }else if(t==='city'||levelLabel==='地级'){
+      if(n.indexOf('自治州')>=0||n.indexOf('州')>=0){secLabel='州委书记';govLabel='州长';}
+      else if(n.indexOf('盟')>=0){secLabel='盟委书记';govLabel='盟长';}
+      else if(n.indexOf('地区')>=0){secLabel='地委书记';govLabel='行署专员';}
+      else{secLabel='市委书记';govLabel='市长';}
+    }else if(levelLabel==='县级'){
+      if(n.indexOf('区')>=0&&n.indexOf('市')<0){secLabel='区委书记';govLabel='区长';}
+      else if(n.indexOf('县')>=0||n.indexOf('旗')>=0){secLabel='县委书记';govLabel='县长';}
+      else if(n.indexOf('市')>=0){secLabel='市委书记';govLabel='市长';}
+    }
+    if(d.sec)h+='<div class="detail-field"><span class="df-label">'+secLabel+'</span><span class="df-value">'+d.sec+'</span></div>';
+    if(d.secDep)h+='<div class="detail-field"><span class="df-label">副'+secLabel.replace('书记','')+'副书记</span><span class="df-value">'+d.secDep+'</span></div>';
+    if(d.gov)h+='<div class="detail-field"><span class="df-label">'+govLabel+'</span><span class="df-value">'+d.gov+'</span></div>';
+    if(d.govDep)h+='<div class="detail-field" style="flex-wrap:wrap"><span class="df-label">副'+govLabel+'</span><span class="df-value" style="max-width:65%;text-align:right;word-break:break-all">'+d.govDep+'</span></div>';
+    if(d.rd)h+='<div class="detail-field"><span class="df-label">人大常委会主任</span><span class="df-value">'+d.rd+'</span></div>';
     if(d.cppcc)h+='<div class="detail-field"><span class="df-label">政协主席</span><span class="df-value">'+d.cppcc+'</span></div>';
   }
   h+='<hr class="detail-divider">'+
