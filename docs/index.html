@@ -4,1066 +4,911 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>中国行政区划数据库 | China Administrative Division Database</title>
-<script src="./echarts.min.js"></script>
-<script>if(typeof echarts==='undefined'){document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"><\/script>');}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ===== Design System ===== */
 :root{
-  --bg:#111111;
-  --panel:#171717;
-  --border:#303030;
-  --text:#F5F5F5;
-  --text-secondary:#9E9E9E;
-  --text-muted:#606060;
-  --accent:#D32F2F;
-  --accent-hover:#C62828;
-  --accent-subtle:rgba(211,47,47,0.12);
-  --font-sans:'Inter','Noto Sans SC','PingFang SC',sans-serif;
-  --font-mono:SFMono-Regular,Consolas,'Liberation Mono',monospace;
+  --bg:#111;--panel:#171717;--border:#303030;--border-light:#252525;
+  --text:#F5F5F5;--text2:#A0A0A0;--text3:#606060;
+  --accent:#D32F2F;--accent-hover:#C62828;--accent-subtle:rgba(211,47,47,0.1);
+  --font-sans:'Inter','Noto Sans SC','PingFang SC',-apple-system,sans-serif;
+  --font-mono:'SF Mono','Cascadia Code','Consolas',monospace;
+  --status-h:28px;--stats-h:70px;--layer-h:32px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{font-size:15px}
-body{font-family:var(--font-sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-::selection{background:var(--accent);color:#fff}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-sans);overflow:hidden;font-size:13px;line-height:1.5}
+body{-webkit-font-smoothing:antialiased}
 
-/* ===== Layout ===== */
-.app{max-width:1600px;margin:0 auto;padding:0}
+/* ====== STATUS BAR ====== */
+.status-bar{height:var(--status-h);background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:24px;font-size:11px}
+.status-bar .sb-item{display:flex;align-items:center;gap:6px}
+.status-bar .sb-label{color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.status-bar .sb-value{color:var(--text);font-family:var(--font-mono);font-weight:600}
+.status-bar .sb-sep{color:var(--border);margin:0 2px}
+.status-bar .sb-right{margin-left:auto;color:var(--text2);font-size:10px}
 
-/* ===== Header ===== */
-.header{
-  padding:28px 32px 20px;
-  border-bottom:1px solid var(--border);
-}
-.header-badge{
-  display:inline-block;
-  font-size:10px;
-  font-weight:600;
-  letter-spacing:1.5px;
-  color:var(--accent);
-  text-transform:uppercase;
-  margin-bottom:6px;
-}
-.header-title{
-  font-size:22px;
-  font-weight:600;
-  letter-spacing:-0.3px;
-  color:var(--text);
-  line-height:1.3;
-}
-.header-sub{
-  font-size:13px;
-  color:var(--text-secondary);
-  margin-top:4px;
-  font-weight:400;
-}
+/* ====== STATS ====== */
+.stats-bar{height:var(--stats-h);display:flex;align-items:center;justify-content:center;gap:0;border-bottom:1px solid var(--border)}
+.stat-card{text-align:center;padding:8px 32px;position:relative}
+.stat-card+.stat-card::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:1px;background:var(--border)}
+.stat-value{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;color:var(--text);font-family:var(--font-mono)}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
 
-/* ===== Stats Bar ===== */
-.stats-bar{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  border-bottom:1px solid var(--border);
-}
-.stat-item{
-  padding:16px 20px;
-  border-right:1px solid var(--border);
-  text-align:center;
-}
-.stat-item:last-child{border-right:none}
-.stat-num{
-  font-size:28px;
-  font-weight:600;
-  color:var(--text);
-  line-height:1;
-  font-feature-settings:"tnum";
-}
-.stat-label{
-  font-size:11px;
-  color:var(--text-secondary);
-  margin-top:4px;
-  letter-spacing:0.5px;
-}
+/* ====== LAYER TOGGLE ====== */
+.layer-bar{height:var(--layer-h);display:flex;align-items:center;padding:0 12px;gap:4px;border-bottom:1px solid var(--border);background:var(--panel)}
+.layer-btn{padding:3px 12px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;border-radius:2px;font-family:var(--font-sans);transition:all .15s}
+.layer-btn:hover{color:var(--text);border-color:var(--text3)}
+.layer-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.layer-sep{flex:1}
+.layer-hint{font-size:10px;color:var(--text3)}
 
-/* ===== Toolbar ===== */
-.toolbar{
-  display:flex;
-  align-items:center;
-  gap:4px;
-  padding:10px 20px;
-  border-bottom:1px solid var(--border);
-  background:var(--panel);
-}
-.toolbar-btn{
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--text-secondary);
-  padding:5px 14px;
-  font-size:12px;
-  font-family:inherit;
-  cursor:pointer;
-  transition:all 120ms ease;
-  border-radius:0;
-}
-.toolbar-btn:hover{
-  border-color:var(--text-muted);
-  color:var(--text);
-}
-.toolbar-btn.active{
-  background:var(--accent-subtle);
-  border-color:var(--accent);
-  color:var(--accent);
-}
+/* ====== MAIN LAYOUT ====== */
+.main-content{display:flex;height:calc(100vh - var(--status-h) - var(--stats-h) - var(--layer-h))}
+.left-panel{width:280px;min-width:200px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.map-container{flex:1;position:relative;min-width:0}
+.right-panel{width:340px;min-width:240px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 
-/* ===== Breadcrumb Row ===== */
-.breadcrumb-row{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  padding:10px 20px;
-  border-bottom:1px solid var(--border);
-  font-size:12px;
-  color:var(--text-secondary);
-  background:var(--panel);
-  min-height:36px;
-}
-.breadcrumb-row .bc-sep{
-  color:var(--text-muted);
-  font-size:10px;
-}
-.breadcrumb-row .bc-path{
-  color:var(--text);
-}
-.breadcrumb-row .bc-time{
-  margin-left:auto;
-  color:var(--text-muted);
-  font-size:11px;
-}
-.breadcrumb-row .bc-item{
-  cursor:pointer;
-  transition:color 120ms ease;
-}
-.breadcrumb-row .bc-item:hover{color:var(--accent)}
+/* ====== LEFT PANEL ====== */
+.search-box{margin:8px;position:relative}
+.search-box input{width:100%;padding:7px 32px 7px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:12px;outline:none;font-family:var(--font-sans);border-radius:2px}
+.search-box input:focus{border-color:var(--text3)}
+.search-box input::placeholder{color:var(--text3)}
+.search-box .search-icon{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+.scroll-list{flex:1;overflow-y:auto;padding:0 6px 8px}
+.scroll-list::-webkit-scrollbar{width:4px}
+.scroll-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.area-item{padding:5px 8px;cursor:pointer;font-size:12px;color:var(--text2);border-radius:2px;margin:1px 0;transition:all .1s;display:flex;justify-content:space-between;align-items:center}
+.area-item:hover{background:var(--border-light);color:var(--text)}
+.area-item.active{background:var(--accent-subtle);color:var(--accent)}
+.area-item .ai-code{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-left:6px}
+.list-section{padding:6px 0}
+.list-header{padding:4px 8px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border-light);margin-bottom:4px}
 
-/* ===== Main Layout ===== */
-.main-layout{
-  display:flex;
-  height:calc(100vh - 280px);
-  min-height:500px;
-}
+/* ====== MAP ====== */
+#mapCanvas{width:100%;height:100%}
+.map-tooltip{position:absolute;background:rgba(23,23,23,.96);border:1px solid var(--border);padding:10px 14px;pointer-events:none;z-index:100;font-size:12px;line-height:1.6;display:none;max-width:260px;border-radius:2px}
+.map-tooltip .tt-name{font-size:14px;font-weight:600;margin-bottom:4px}
+.map-tooltip .tt-row{display:flex;gap:8px;font-size:11px}
+.map-tooltip .tt-label{color:var(--text3);min-width:48px}
+.map-tooltip .tt-value{color:var(--text);font-family:var(--font-mono)}
 
-/* ===== Left Sidebar ===== */
-.left-sidebar{
-  width:280px;
-  flex-shrink:0;
-  display:flex;
-  flex-direction:column;
-  border-right:1px solid var(--border);
-  background:var(--panel);
-  overflow:hidden;
-}
-.left-sidebar .sidebar-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:12px 16px;
-  border-bottom:1px solid var(--border);
-}
-.left-sidebar .sidebar-header h3{
-  font-size:12px;
-  font-weight:500;
-  color:var(--text-secondary);
-  text-transform:uppercase;
-  letter-spacing:0.8px;
-}
-.left-sidebar .sidebar-header .badge{
-  font-size:10px;
-  padding:2px 8px;
-  border:1px solid var(--border);
-  color:var(--text-muted);
-  font-family:var(--font-mono);
-}
-.search-box{
-  padding:10px 16px;
-  border-bottom:1px solid var(--border);
-}
-.search-input-wrap{
-  position:relative;
-}
-.search-input-wrap::before{
-  content:'';
-  position:absolute;
-  left:10px;
-  top:50%;
-  transform:translateY(-50%);
-  width:12px;
-  height:12px;
-  border:1.5px solid var(--text-muted);
-  border-radius:50%;
-}
-.search-input-wrap::after{
-  content:'';
-  position:absolute;
-  left:20px;
-  top:calc(50% + 5px);
-  width:6px;
-  height:1.5px;
-  background:var(--text-muted);
-  transform:rotate(45deg);
-}
-.search-box input{
-  width:100%;
-  padding:8px 10px 8px 28px;
-  background:var(--bg);
-  border:1px solid var(--border);
-  color:var(--text);
-  font-size:12px;
-  font-family:inherit;
-  outline:none;
-}
-.search-box input::placeholder{color:var(--text-muted)}
-.search-box input:focus{border-color:var(--accent)}
-.search-hint{
-  font-size:10px;
-  color:var(--text-muted);
-  margin-top:4px;
-  padding-left:2px;
-}
-.left-sidebar .sidebar-body{
-  flex:1;
-  overflow-y:auto;
-  padding:8px 0;
-}
-.left-sidebar .sidebar-body::-webkit-scrollbar{width:4px}
-.left-sidebar .sidebar-body::-webkit-scrollbar-track{background:transparent}
-.left-sidebar .sidebar-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.list-title{
-  font-size:11px;
-  color:var(--text-muted);
-  padding:8px 16px 6px;
-  font-family:var(--font-mono);
-}
-.list-title span{color:var(--text-muted)}
-.area-item{
-  padding:8px 16px;
-  cursor:pointer;
-  border-left:2px solid transparent;
-  transition:all 120ms ease;
-  font-size:13px;
-  color:var(--text);
-}
-.area-item:hover{
-  background:rgba(255,255,255,0.04);
-  border-left-color:var(--accent);
-}
-.area-item.expanded{
-  background:var(--accent-subtle);
-  border-left-color:var(--accent);
-}
-.area-item .ai-name{font-size:13px;font-weight:400}
-.area-item.expanded .ai-name{color:var(--accent)}
-.empty-state{
-  text-align:center;
-  padding:40px 20px;
-  color:var(--text-muted);
-  font-size:12px;
-}
+/* ====== RIGHT PANEL ====== */
+.panel-header{padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center}
+.panel-body{flex:1;overflow-y:auto;padding:12px}
+.panel-body::-webkit-scrollbar{width:4px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.empty-state{padding:40px 20px;text-align:center;color:var(--text3);font-size:12px;line-height:1.8}
+.empty-state .es-icon{font-size:36px;margin-bottom:12px;opacity:.3}
 
-/* ===== Map ===== */
-.map-wrapper{
-  flex:1;
-  position:relative;
-  overflow:hidden;
-  background:var(--bg);
-}
-#map{width:100%;height:100%}
+/* ====== DETAIL SECTIONS ====== */
+.detail-section{margin-bottom:16px}
+.detail-section:last-child{margin-bottom:0}
+.ds-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)}
+.ds-name{font-size:18px;font-weight:700;margin-bottom:8px;line-height:1.2}
+.ds-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
+.ds-row .ds-label{color:var(--text3);min-width:80px}
+.ds-row .ds-value{color:var(--text);text-align:right;font-family:var(--font-mono)}
+.ds-value.clickable{color:var(--text2);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.ds-value.clickable:hover{color:var(--accent)}
 
-/* ===== Right Sidebar ===== */
-.right-sidebar{
-  width:340px;
-  flex-shrink:0;
-  display:flex;
-  flex-direction:column;
-  border-left:1px solid var(--border);
-  background:var(--panel);
-  overflow:hidden;
-}
-.right-sidebar .sidebar-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:12px 16px;
-  border-bottom:1px solid var(--border);
-}
-.right-sidebar .sidebar-header h3{
-  font-size:13px;
-  font-weight:500;
-  color:var(--text);
-}
-.right-sidebar .sidebar-header .badge{
-  font-size:10px;
-  padding:2px 8px;
-  border:1px solid var(--border);
-  color:var(--text-muted);
-  font-family:var(--font-mono);
-}
-.right-sidebar .sidebar-body{
-  flex:1;
-  overflow-y:auto;
-  padding:0;
-}
-.right-sidebar .sidebar-body::-webkit-scrollbar{width:4px}
-.right-sidebar .sidebar-body::-webkit-scrollbar-track{background:transparent}
-.right-sidebar .sidebar-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* ====== HIERARCHY TREE ====== */
+.hierarchy{margin-top:4px}
+.h-node{padding:3px 0;font-size:12px;display:flex;align-items:center;gap:4px}
+.h-node .h-bullet{color:var(--text3);font-size:10px;min-width:16px;text-align:center}
+.h-node .h-name{color:var(--text2)}
+.h-node .h-name.active{color:var(--text);font-weight:600}
+.h-node .h-name.clickable{cursor:pointer;color:var(--accent)}
+.h-node .h-name.clickable:hover{text-decoration:underline}
+.h-node.root .h-bullet{color:var(--accent)}
 
-/* ===== Detail Panel (Gov Archive Style) ===== */
-.detail-section{
-  padding:16px;
-}
-.detail-header{
-  margin-bottom:16px;
-}
-.detail-name{
-  font-size:20px;
-  font-weight:600;
-  color:var(--text);
-  letter-spacing:-0.2px;
-}
-.detail-parent{
-  font-size:12px;
-  color:var(--text-secondary);
-  margin-top:2px;
-}
-.detail-divider{
-  border:none;
-  border-top:1px solid var(--border);
-  margin:12px 0;
-}
-.detail-field{
-  padding:8px 0;
-  border-bottom:1px solid rgba(48,48,48,0.5);
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-}
-.detail-field:last-child{border-bottom:none}
-.detail-field .df-label{
-  font-size:11px;
-  color:var(--text-muted);
-  text-transform:uppercase;
-  letter-spacing:0.5px;
-  font-family:var(--font-mono);
-  flex-shrink:0;
-  min-width:80px;
-}
-.detail-field .df-value{
-  font-size:13px;
-  color:var(--text);
-  text-align:right;
-  max-width:65%;
-  word-break:break-all;
-  line-height:1.5;
-}
-.detail-path{
-  font-size:12px;
-  color:var(--text-secondary);
-  line-height:1.8;
-}
-.detail-path .dp-arrow{color:var(--text-muted);margin:0 4px}
-.detail-footer{
-  border-top:1px solid var(--border);
-  padding:16px;
-}
-.detail-footer-text{
-  font-size:10px;
-  color:var(--text-muted);
-  font-family:var(--font-mono);
-  letter-spacing:0.3px;
-}
+/* ====== CODE ANALYSIS ====== */
+.code-blocks{display:flex;flex-direction:column;gap:6px}
+.code-block{border:1px solid var(--border-light);padding:8px 10px;border-radius:2px}
+.code-block .cb-code{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--accent);margin-bottom:2px}
+.code-block .cb-name{font-size:12px;color:var(--text2)}
+.code-block .cb-level{font-size:10px;color:var(--text3);margin-left:8px}
 
-/* ===== Compare ===== */
-.compare-hint{
-  text-align:center;
-  padding:40px 20px;
-  color:var(--text-muted);
-  font-size:12px;
-}
+/* ====== COMPARE MODE ====== */
+.compare-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;padding:40px}
+.compare-overlay.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.compare-panel{background:var(--panel);border:1px solid var(--border);width:100%;max-width:900px;max-height:80vh;overflow-y:auto;border-radius:2px}
+.compare-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.compare-header .ch-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text3)}
+.compare-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:4px 8px}
+.compare-close:hover{color:var(--accent)}
+.compare-body{display:flex}
+.compare-col{flex:1;padding:16px;text-align:center}
+.compare-col+.compare-col{border-left:1px solid var(--border)}
+.compare-col .cc-name{font-size:16px;font-weight:700;margin-bottom:12px}
+.compare-col .cc-empty{padding:40px;color:var(--text3);font-size:12px}
+.compare-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+.compare-row .cr-label{color:var(--text3)}
+.compare-row .cr-value{color:var(--text);font-family:var(--font-mono)}
 
-/* ===== History ===== */
-.history-item{
-  padding:10px 16px;
-  border-bottom:1px solid var(--border);
-  font-size:12px;
-}
-.history-item .hi-type{
-  display:inline-block;
-  padding:1px 6px;
-  font-size:10px;
-  margin-right:6px;
-  font-family:var(--font-mono);
-}
-.hi-success{color:#4caf50;border:1px solid rgba(76,175,80,0.3)}
-.hi-error{color:#f44336;border:1px solid rgba(244,67,54,0.3)}
-.hi-info{color:#2196f3;border:1px solid rgba(33,150,243,0.3)}
-.hi-start{color:#ff9800;border:1px solid rgba(255,152,0,0.3)}
-.history-item .hi-time{color:var(--text-muted);font-size:11px}
-.history-item .hi-detail{color:var(--text-secondary);margin-top:2px;font-size:11px}
+/* ====== SHORTCUTS ====== */
+.shortcut-hint{position:fixed;bottom:12px;right:12px;font-size:10px;color:var(--text3);background:var(--panel);border:1px solid var(--border);padding:4px 10px;border-radius:2px;pointer-events:none;z-index:50;opacity:.6}
+.shortcut-hint kbd{font-family:var(--font-mono);border:1px solid var(--border);padding:0 4px;border-radius:1px;margin:0 2px;font-size:9px}
 
-/* ===== Responsive ===== */
-@media(max-width:960px){
-  .main-layout{flex-direction:column;height:auto}
-  .left-sidebar,.right-sidebar{width:100%;max-height:200px}
-  .map-wrapper{height:400px}
-  .stats-bar{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1024px){
+  .main-content{flex-direction:column}
+  .left-panel{width:100%;height:150px;border-right:none;border-bottom:1px solid var(--border)}
+  .right-panel{width:100%;height:200px;border-left:none;border-top:1px solid var(--border)}
+  .map-container{height:calc(100vh - var(--status-h) - var(--stats-h) - var(--layer-h) - 350px)}
+  .stat-card{padding:8px 16px}
+  .stat-value{font-size:22px}
 }
 </style>
 </head>
 <body>
-<div class="app">
 
-<!-- ========== HEADER ========== -->
-<div class="header">
-  <div class="header-badge">China Administrative Division Database</div>
-  <div class="header-title">中华人民共和国行政区划数据库</div>
-  <div class="header-sub">覆盖全国县级以上行政区划 · 数据更新至2026年</div>
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="sb-item"><span class="sb-label">DATASET</span><span class="sb-value" id="statusVersion">v1.0</span></div>
+  <div class="sb-item"><span class="sb-label">UPDATED</span><span class="sb-value" id="statusUpdated">—</span></div>
+  <div class="sb-item"><span class="sb-label">COVERAGE</span><span class="sb-value" id="statusCoverage">—</span></div>
+  <div class="sb-item"><span class="sb-label">RECORDS</span><span class="sb-value" id="statusRecords">—</span></div>
+  <div class="sb-item"><span class="sb-label">LAYER</span><span class="sb-value" id="statusLayer">—</span></div>
+  <div class="sb-right">CHINA ADMINISTRATIVE DIVISION DATABASE TERMINAL</div>
 </div>
 
-<!-- ========== STATS ========== -->
-<div class="stats-bar">
-  <div class="stat-item"><div class="stat-num">34</div><div class="stat-label">省级行政区</div></div>
-  <div class="stat-item"><div class="stat-num">333</div><div class="stat-label">地级行政区</div></div>
-  <div class="stat-item"><div class="stat-num">2800+</div><div class="stat-label">县级行政区</div></div>
-  <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">数据覆盖率</div></div>
+<!-- STATS -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat-card"><div class="stat-value" id="statProv">34</div><div class="stat-label">Provinces</div></div>
+  <div class="stat-card"><div class="stat-value" id="statPref">333</div><div class="stat-label">Prefectures</div></div>
+  <div class="stat-card"><div class="stat-value" id="statCnty">2800+</div><div class="stat-label">Counties</div></div>
+  <div class="stat-card"><div class="stat-value" id="statTotal">3197</div><div class="stat-label">Total Divisions</div></div>
 </div>
 
-<!-- ========== TOOLBAR ========== -->
-<div class="toolbar">
-  <button class="toolbar-btn active" id="modeProvince" onclick="setMapMode('province')">省级</button>
-  <button class="toolbar-btn" id="modeCity" onclick="setMapMode('city')">地级</button>
-  <span style="flex:1"></span>
-  <button class="toolbar-btn" id="labelToggle" onclick="toggleLabels()">地名</button>
-  <button class="toolbar-btn" id="compareToggle" onclick="toggleCompare()">对比</button>
-  <button class="toolbar-btn" id="historyToggle" onclick="toggleHistory()">记录</button>
-  <button class="toolbar-btn" id="darkToggle" onclick="toggleDark()">亮色</button>
+<!-- LAYER TOGGLE -->
+<div class="layer-bar">
+  <button class="layer-btn active" data-layer="province">PROVINCE</button>
+  <button class="layer-btn" data-layer="prefecture">PREFECTURE</button>
+  <button class="layer-btn" data-layer="county">COUNTY</button>
+  <span class="layer-sep"></span>
+  <button class="layer-btn" id="btnCompare">COMPARE</button>
+  <button class="layer-btn" id="btnReset">RESET VIEW</button>
+  <span class="layer-hint">Press <kbd>/</kbd> to search</span>
 </div>
 
-<!-- ========== BREADCRUMB ========== -->
-<div class="breadcrumb-row" id="breadcrumb">
-  <span class="bc-path">中国</span>
-</div>
-
-<!-- ========== MAIN LAYOUT ========== -->
-<div class="main-layout">
-
-  <!-- LEFT SIDEBAR -->
-  <div class="left-sidebar">
-    <div class="sidebar-header">
-      <h3 id="leftPanelTitle">省级列表</h3>
-      <span class="badge" id="leftPanelBadge">省级</span>
-    </div>
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <!-- LEFT: Data Browser -->
+  <div class="left-panel">
     <div class="search-box">
-      <div class="search-input-wrap">
-        <input type="text" id="searchInput" placeholder="搜索行政区名称或代码..." oninput="searchList(this.value)">
+      <input type="text" id="searchInput" placeholder="Search by name or code...">
+      <span class="search-icon">&#8981;</span>
+    </div>
+    <div class="scroll-list" id="dataList">
+      <div class="empty-state">Loading...</div>
+    </div>
+  </div>
+
+  <!-- CENTER: Map -->
+  <div class="map-container" id="mapContainer">
+    <div id="mapCanvas"></div>
+    <div class="map-tooltip" id="mapTooltip"></div>
+  </div>
+
+  <!-- RIGHT: Data Panel -->
+  <div class="right-panel">
+    <div class="panel-header"><span>DATA VIEW</span><span id="panelBadge" style="color:var(--accent)">—</span></div>
+    <div class="panel-body" id="dataPanel">
+      <div class="empty-state">
+        <div class="es-icon">&#9678;</div>
+        <div>Select a division on the map<br>or search to begin exploration.</div>
+        <div style="margin-top:8px;font-size:10px">Click the map to enter data browsing mode</div>
       </div>
-      <div class="search-hint" id="searchHint">2863 administrative units indexed</div>
-    </div>
-    <div class="sidebar-body" id="leftPanelContent">
-      <div class="empty-state">正在加载数据...</div>
     </div>
   </div>
+</div>
 
-  <!-- MAP -->
-  <div class="map-wrapper"><div id="map"></div></div>
-
-  <!-- RIGHT SIDEBAR -->
-  <div class="right-sidebar">
-    <div class="sidebar-header">
-      <h3 id="rightPanelTitle">地区详情</h3>
-      <span class="badge" id="rightPanelBadge"></span>
+<!-- COMPARE OVERLAY -->
+<div class="compare-overlay" id="compareOverlay">
+  <div class="compare-panel">
+    <div class="compare-header">
+      <span class="ch-title">COMPARE MODE</span>
+      <button class="compare-close" onclick="closeCompare()">&times;</button>
     </div>
-    <div class="sidebar-body" id="rightPanelContent">
-      <div class="empty-state">点击地图或列表中的区域查看详情</div>
-    </div>
+    <div class="compare-body" id="compareBody"></div>
   </div>
-
-</div>
 </div>
 
+<!-- SHORTCUT HINT -->
+<div class="shortcut-hint" id="shortcutHint">
+  <kbd>/</kbd> Search &nbsp; <kbd>Esc</kbd> Close &nbsp; <kbd>&larr;</kbd><kbd>&rarr;</kbd> Navigate
+</div>
+
+<script src="./echarts.min.js"></script>
 <script>
-// ========== 省级数据（31省区市，2026年5月） ==========
-var D={
-'110000':{n:'北京市',p:'2188.6万',a:'1.64万km2',g:'5.00万亿',sec:'尹力',secDep:'游钧',secComm:'陈健、李成林、夏林茂、靳伟、孙军民、赵磊、于英杰、朱军、谈绪祥、马骏',gov:'殷勇',govDep:'夏林茂、靳伟、司马红、穆鹏、孙硕、秦运彪、文献、唐文弘',govSec:'曾劲',rd:'尹力',rdDep:'游钧、齐静、庞丽娟、侯君舒、于军、王建中',rdSec:'王建中（兼）',cppcc:'魏小东',cppccDep:'崔述强、张家明、卢彦、王红、刘忠范、燕瑛、王金南、郭延红',cppccSec:'刘占兴',cp:'16区',seat:'通州区'},
-'120000':{n:'天津市',p:'1360万',a:'1.19万km2',g:'1.80万亿',sec:'陈敏尔',secDep:'张工、刘桂平',secComm:'连茂君、周德睿、王旭、郭永红、沈蕾、王力军、曲孝丽、王庭凯、冀国强、李文海',gov:'张工',govDep:'王旭、李文海、谢元、王瑛玮、王宝雨、翟立新、王秀峰',govSec:'胡学明',rd:'喻云林',rdDep:'赵飞、马顺清、张庆恩、马延和、殷向杰、张凤宝',rdSec:'李清',cppcc:'王常松',cppccDep:'孙文魁、李绍洪、尚斌义、张金英、齐成喜、王建国、高秀梅、张凤华',cppccSec:'戴永康',cp:'16区',seat:'河西区'},
-'130000':{n:'河北省',p:'7393万',a:'18.88万km2',g:'4.76万亿',sec:'倪岳峰',secDep:'王正谱、王陆进',secComm:'张超超、张国华、刘昌林、柯俊、左力、董晓宇、武卫东、张成中、常斌、傅晓东',gov:'王正谱',govDep:'张成中、时清霜、胡启生、金晖、王立彤、董兆伟、赵大春',govSec:'朱浩文',rd:'倪岳峰',rdDep:'董仚生、周仲明、张妹芝、高云霄、吴晓华、陈平',rdSec:'朱浩文',cppcc:'张国华',cppccDep:'冉万祥、葛会波、卢晓光、边发吉、苏银增、王宝山、常丽虹、康振海',cppccSec:'陈书增',cp:'11地级市',seat:'石家庄市'},
-'140000':{n:'山西省',p:'3424万',a:'15.67万km2',g:'2.55万亿',sec:'唐登杰',secDep:'卢东亮、王拥军',secComm:'李金科、董晓宇、汪海洲、胡立杰、张碧涌、赵红严、林红玉、张韶华',gov:'卢东亮',govDep:'董晓宇、汪海洲、景普秋、朱晓东、常书铭、徐朝锋',govSec:'李秋柱',rd:'唐登杰',rdDep:'罗清宇、贺天才、谢红、吴俊清、李俊明、王纯',rdSec:'郭海刚',cppcc:'张春林',cppccDep:'徐广国、张吉福、郑连生、张复明、李晓波、李青山、李思进、汤志平、王立伟、闫晨曦、王蕾',cppccSec:'毛益民',cp:'11地级市',seat:'太原市'},
-'150000':{n:'内蒙古',p:'2400万',a:'118.3万km2',g:'2.65万亿',sec:'王伟中',secDep:'包钢、时光辉',secComm:'黄志强、李玉刚、郑宏范、丁绣峰、孟宪东、孟繁利、胡达古拉、于立新、张韶春',gov:'包钢',govDep:'黄志强、奇巴图、郑光照、代钦、孙俊青、唐毅、苏和',govSec:'郑东波',rd:'王伟中',rdDep:'张韶春、郑宏范、丁绣峰、孟宪东、李玉刚、艾丽华、李秉荣',rdSec:'万超岐',cppcc:'张延昆',cppccDep:'罗志虎、其其格、魏国楠、安润生、张磊、杨劼、孙俊青、杨牧',cppccSec:'杨利民',cp:'12地级市',seat:'呼和浩特市'},
-'210000':{n:'辽宁省',p:'4145万',a:'14.86万km2',g:'3.26万亿',sec:'许昆林',secDep:'王新伟、熊茂平',secComm:'李猛、张立林、隋青、赵承、蒋天宝、姜有为、霍步刚、孟凡清、郑艺',gov:'王新伟',govDep:'张立林、王利波、楚天运、吴春耕、顾军',govSec:'赵颖',rd:'许昆林',rdDep:'陈向群、范继英、崔枫林、张铁民、康捷、杨关林、于国安',rdSec:'于国安（兼）',cppcc:'周波',cppccDep:'戴玉林、卢柯、姜军、赵延庆、余功斌、温雪琼、刘中民、邵林',cppccSec:'王德佳',cp:'14地级市',seat:'沈阳市'},
-'220000':{n:'吉林省',p:'2337万',a:'18.74万km2',g:'1.44万亿',sec:'黄强',secDep:'胡玉亭、吴海英',secComm:'胡家福、蔡东、张恩惠、邱江、史文斌、王子联、曹路宝、李明伟、李明祥',gov:'胡玉亭',govDep:'蔡东、刘凯、孙简、刘伟、陈育煌',govSec:'洪庆',rd:'黄强',rdDep:'田锦尘、范锐平、贾晓东、郝国昆、李龙熙、李伟',rdSec:'李中新',cppcc:'朱国贤',cppccDep:'李龙德、李维斗、郭乃硕、蔡国伟、秦海涛、刘化文、梁仁哲',cppccSec:'刘伟',cp:'9地级市',seat:'长春市'},
-'230000':{n:'黑龙江省',p:'3048万',a:'47.3万km2',g:'1.64万亿',sec:'许勤',secDep:'梁惠玲、刘惠',secComm:'边学文、杨博、于洪涛、赵忠、陈少波、徐向国、王岚、刘振国',gov:'梁惠玲',govDep:'陈少波、余建、李毅、韩圣健、张起翔、丛丽',govSec:'常城',rd:'许勤',rdDep:'张安顺、王永康、贾玉梅、聂云凌、杨廷双、方传龙',rdSec:'宋宏伟',cppcc:'蓝绍敏',cppccDep:'张显友、马立群、庞达、迟子建、韩立华、钱福永、张亚中、邵国强、徐建国',cppccSec:'徐利刃',cp:'13地级市',seat:'哈尔滨市'},
-'310000':{n:'上海市',p:'2489.4万',a:'0.63万km2',g:'5.67万亿',sec:'陈吉宁',secDep:'龚正、朱忠明',secComm:'迟耀云、吴伟、赵嘉鸣、陈通、张为、陈金山、李政、华源、陈杰',gov:'龚正',govDep:'吴伟、陈杰、张小宏、卢山、解冬、张亚宏、陈宇剑、贺青',govSec:'马春雷',rd:'黄莉新',rdDep:'郑钢淼、周慧琳、蔡威、高小玫、肖贵玉、陈靖、莫负春',rdSec:'谢坚钢',cppcc:'胡文容',cppccDep:'张恩迪、李逸平、金兴明、黄震、虞丽娟、吴信宝、寿子琪、钱锋',cppccSec:'黄国平',cp:'16区',seat:'黄浦区'},
-'320000':{n:'江苏省',p:'8518万',a:'10.72万km2',g:'14.00万亿',sec:'信长星',secDep:'刘小涛、张忠',secComm:'周红波、刘建洋、储永宏、马欣、张国成、胡广杰、范波、徐缨、李耀光',gov:'刘小涛',govDep:'马欣、赵岩、陈忠伟、马士光、胡彬郴、沈剑荣',govSec:'赵建军',rd:'信长星',rdDep:'樊金龙、张爱军、储永宏、夏心旻、周广智、王学锋',rdSec:'陈建刚',cppcc:'张义珍',cppccDep:'杨岳、王荣平、阎立、周继业、姚晓东、王昊、马余强',cppccSec:'诸纪录',cp:'13地级市',seat:'南京市'},
-'330000':{n:'浙江省',p:'6630万',a:'10.55万km2',g:'9.45万亿',sec:'王浩',secDep:'刘捷、王成',secComm:'傅明先、徐文光、邱启文、王成国、刘非、杨荫凯、冯怡、张振丰、李岩益',gov:'刘捷',govDep:'徐文光、张雁云、胡伟、杨青玖、王钊、何中伟、姚高员',govSec:'徐大可',rd:'王浩',rdDep:'陈金彪、彭佳学、王成国、吴晶、刘忻、赵光君',rdSec:'鲁俊',cppcc:'廉毅敏',cppccDep:'王昌荣、陈小平、蔡秀军、成岳冲、陈擎苍、张学伟、叶正波、尹学群、高鹰忠',cppccSec:'陈东凌',cp:'11地级市',seat:'杭州市'},
-'340000':{n:'安徽省',p:'6070万',a:'14.01万km2',g:'5.06万亿',sec:'梁言顺',secDep:'王清宪、刘海泉',secComm:'孙红梅、王东伟、钱三雄、单向前、蔚盛斌、覃卫国',gov:'王清宪',govDep:'王东伟、张曙光、任清华、孙勇、李中、范付中、何淳宽',govSec:'潘朝晖',rd:'梁言顺',rdDep:'陶明伦、张韵声、何树山、王翠凤、刘明波、韩军、魏晓明',rdSec:'白金明',cppcc:'唐良智',cppccDep:'孙云飞、周喜安、郑宏、李和平、张祥根、陶仪声、马传喜、张西明、张永',cppccSec:'张韵波',cp:'16地级市',seat:'合肥市'},
-'350000':{n:'福建省',p:'4180万',a:'12.4万km2',g:'6.02万亿',sec:'周祖翼',secDep:'赵龙、郭宁宁',secComm:'张彦、崔永辉、吴偕林、宋鸿喜、石好勇、王永礼、苗延红、林涛',gov:'赵龙',govDep:'王永礼、李建成、林瑞良、王金福、江尔雄、赵增连、魏晓奎',govSec:'李斌',rd:'周祖翼',rdDep:'周联清、庄稼汉、李德金、檀云坤、袁毅、严可仕',rdSec:'黄新銮',cppcc:'滕佳材',cppccDep:'张兆民、王光远、阮诗玮、刘献祥、严可仕、余军、张国旺、黄玲',cppccSec:'陆开锦',cp:'9地级市',seat:'福州市'},
-'360000':{n:'江西省',p:'4500万',a:'16.69万km2',g:'3.42万亿',sec:'尹弘',secDep:'叶建春、陈永奇',secComm:'李伟、任珠峰、庄兆林、黄喜忠、时玉宝、陈敏、卢小青',gov:'叶建春',govDep:'任珠峰、孙洪山、袁勤华、夏文勇、史可、万广明、张莹',govSec:'李克坚',rd:'尹弘',rdDep:'胡世忠、张小平、王少玄、朱斌、张伟',rdSec:'杨文英',cppcc:'宋福龙',cppccDep:'陈俊卿、谢茹、尹建业、孙菊生、陈兴超、卢天锡、于秀明、辜清',cppccSec:'彭世东',cp:'11地级市',seat:'南昌市'},
-'370000':{n:'山东省',p:'10043万',a:'15.58万km2',g:'10.32万亿',sec:'林武',secDep:'周乃翔、徐海荣',secComm:'白玉刚、江成、王随莲、王良、赵豪志、宋军继、张海波、李猛、傅明先',gov:'周乃翔',govDep:'张海波、宋军继、孙继业、范波、陈平、王桂英、温暖、孙喜民',govSec:'宋军继（兼）',rd:'林武',rdDep:'徐海荣、白玉刚、江成、王随莲、王良、赵豪志、宋军继',rdSec:'张斌',cppcc:'葛慧君',cppccDep:'林峰海、程林、刘均刚、段青英、张新文、孙继业、宋永祥、田卫东',cppccSec:'秦传滨',cp:'16地级市',seat:'济南市'},
-'410000':{n:'河南省',p:'9785万',a:'16.7万km2',g:'6.66万亿',sec:'刘宁',secDep:'王凯、张巍',secComm:'安伟、秦国文、王刚、张雷明、赵钧、张敏、王崧、陈春江',gov:'王凯',govDep:'张敏、刘玉江、宋争辉、郑海洋、李酌、李涛、吕国范',govSec:'朱鸣',rd:'刘宁',rdDep:'李亚、孙守刚、江凌、陈星、何金平、刘南昌、张建慧、张弓',rdSec:'吉炳伟',cppcc:'孔昌生',cppccDep:'王战营、谢玉安、霍金花、张震宇、朱焕然、孙运锋、黄红霞',cppccSec:'汪中山',cp:'17地级市',seat:'郑州市'},
-'420000':{n:'湖北省',p:'5807万',a:'18.59万km2',g:'6.27万亿',sec:'王忠林',secDep:'李殿勋、诸葛宇杰',secComm:'侯淅珉、张文兵、宁咏、何良军、王林虎、琚朝晖、吴海涛、盛阅春、彭勇',gov:'李殿勋',govDep:'张文兵、陈平、黎东辉、胡亚波、徐文海、张文彤',govSec:'王太晖',rd:'王忠林',rdDep:'马国强、周洪宇、万勇、刘雪荣、刘晓鸣、胡志强、杨云彦',rdSec:'张爱国',cppcc:'孙伟',cppccDep:'李兵、张柏青、郭跃进、杨玉华、秦顺全、王红玲、王兴於、江利平',cppccSec:'涂远超',cp:'13地级市',seat:'武汉市'},
-'430000':{n:'湖南省',p:'6560万',a:'21.18万km2',g:'5.53万亿',sec:'沈晓明',secDep:'毛伟明、谢卫江',secComm:'吴桂英、隋忠诚、魏建锋、王道席、刘红兵、郭灵计、马永生',gov:'毛伟明',govDep:'王道席、王一鸥、蒋涤非、王俊寿、陈竞、余红胜',govSec:'瞿海',rd:'沈晓明',rdDep:'吴桂英、陈飞、胡旭晟、周农、彭国甫、陈文浩',rdSec:'王晓科',cppcc:'毛万春',cppccDep:'李建中、张健、李民、肖百灵、虢正贵、何寄华、肖祥清、潘碧灵',cppccSec:'邓群策',cp:'14地级市',seat:'长沙市'},
-'440000':{n:'广东省',p:'12780万',a:'17.97万km2',g:'14.58万亿',sec:'黄坤明',secDep:'孟凡利、马森述',secComm:'张虎、王曦、冯忠华、袁古洁、靳磊、张国智、胡劲军、张弓',gov:'孟凡利',govDep:'张虎、张国智、刘国周、王胜、李运、马正勇、唐屹峰',govSec:'陈敏',rd:'黄楚平',rdDep:'张硕辅、黄宁生、叶贞琴、陈如桂、张少康、吕业升、王波',rdSec:'许红',cppcc:'林克庆',cppccDep:'许瑞生、邓海光、袁宝成、王学成、黄武、张嘉极、李心、温国辉、郭永航、郑轲、郑振涛、陈文明',cppccSec:'吴伟鹏',cp:'21地级市',seat:'广州市'},
-'450000':{n:'广西',p:'5010万',a:'23.76万km2',g:'2.86万亿',sec:'陈刚',secDep:'韦韬、蔡允革',secComm:'卢新宁、何仁学、农生文、王维平、孙大光、周异决、王心富、刘宁、刘宏武',gov:'韦韬',govDep:'蔡允革、卢新宁、许显辉、眭国华、曹志强、胡帆、蓝晓',govSec:'钟得志',rd:'陈刚',rdDep:'方春明、张晓钦、卢献匾、杨静华、刘有明、周家斌',rdSec:'李东兴',cppcc:'孙大伟',cppccDep:'徐绍川、费志荣、黄俊华、钱学明、王乃学、何辛幸、巫家世、刘咏梅、彭健铭',cppccSec:'卢能干',cp:'14地级市',seat:'南宁市'},
-'460000':{n:'海南省',p:'1048万',a:'3.54万km2',g:'0.81万亿',sec:'冯飞',secDep:'刘小明、杨晋柏',secComm:'陈国猛、王斌、巴特尔、王培杰、王祺扬、纳云德、范少军、尹丽波、邹广',gov:'刘小明',govDep:'巴特尔、谢京、蔡朝晖、李锋、邹广、赵峰、杨国强',govSec:'蔡强',rd:'冯飞',rdDep:'李军、刘星泰、苻彩香、孙大海、闫希军、过建春',rdSec:'曹献坤',cppcc:'李荣灿',cppccDep:'肖莺子、李国梁、史贻云、蒙晓灵、侯茂丰、袁光平、骆清铭、刘艳玲',cppccSec:'罗时祥',cp:'4地级市',seat:'海口市'},
-'500000':{n:'重庆市',p:'3190万',a:'8.24万km2',g:'3.38万亿',sec:'袁家军',secDep:'陈新武、胡衡华',secComm:'宋依佳、姜辉、卢红、刘尚进、商奎、马震、王燕崎',gov:'胡衡华',govDep:'陈新武、马震、郑向东、姜国杰、徐建、黄茂军',govSec:'罗清泉',rd:'王炯',rdDep:'李明清、沈金强、屈谦、欧顺清、赵世庆、许洪斌',rdSec:'周少政',cppcc:'程丽华',cppccDep:'李静、陈贵云、谭家玲、周勇、丁时勇、杜惠平、王昱、但彦铮、罗清泉',cppccSec:'谢礼国',cp:'38区县',seat:'渝中区'},
-'510000':{n:'四川省',p:'8327万',a:'48.6万km2',g:'6.77万亿',sec:'王晓晖',secDep:'施小琳、于立军',secComm:'廖建宇、曹立军、董卫民、普布顿珠、郑莉、田庆盈、左永祥',gov:'施小琳',govDep:'董卫民、胡云、黄瑞雪、马正勇、徐芝文、任京东、张冬云',govSec:'胡元坤',rd:'王晓晖',rdDep:'王雁飞、罗强、祝春秀、彭琳、宋朝华、王菲、何延政',rdSec:'贾瑞云',cppcc:'田向利',cppccDep:'钟勉、杜和平、尧斯丹、林书成、欧阳泽华、刘成鸣、杨丹、谢商华、刘旭光',cppccSec:'李建勤',cp:'21地级市',seat:'成都市'},
-'520000':{n:'贵州省',p:'3850万',a:'17.62万km2',g:'2.27万亿',sec:'徐麟',secDep:'李炳军、马汉成',secComm:'李元平、卢雍政、胡忠雄、郭强、李睿、王雷、郭锡文、曲林',gov:'李炳军',govDep:'董家禄、蔡朝林、张敬平、罗强、杨同光、郭成林',govSec:'魏树旺',rd:'徐麟',rdDep:'陶长海、杨永英、李豫贵、王世杰、桑维亮、王忠',rdSec:'李三旗',cppcc:'赵永清',cppccDep:'赵德明、李汉宇、孙诚谊、张光奇、陈晏、唐德智、李建、孙发',cppccSec:'熊德威',cp:'9地级市',seat:'贵阳市'},
-'530000':{n:'云南省',p:'4700万',a:'39.41万km2',g:'3.15万亿',sec:'王宁',secDep:'王予波、刘洪建',secComm:'赵月霞、曾艳、赵俊民、郑仲全、杨斌、李保俊、胡大鹏、王正英',gov:'王予波',govDep:'赵俊民、王显刚、郭大进、杨洋、刘勇、徐浩、王学勤、李俊杰',govSec:'姜山',rd:'王宁',rdDep:'李小三、宗国英、王树芬、李文荣、徐彬、任军号、罗红江',rdSec:'韩梅',cppcc:'刘晓凯',cppccDep:'赵金、和良辉、高峰、杨嘉武、黄毅、徐彬、何波、童志云、李学林',cppccSec:'张荣明',cp:'16地级市',seat:'昆明市'},
-'540000':{n:'西藏',p:'376万',a:'122.84万km2',g:'0.28万亿',sec:'王君正',secDep:'严金海、嘎玛泽登、刘江',secComm:'任维、旦巴、姜文鹏、赖蛟、达娃次仁、斯朗尼玛、龚会才、袁红刚',gov:'嘎玛泽登',govDep:'任维（常务）、旦巴（常务）、甲热·洛桑丹增、罗梅、郎福宽、韦秀长、徐志涛、次仁平措、张利、赵鹏、朱守科、平措旦增',govSec:'李宏军',rd:'严金海',rdDep:'肖友才、许成仓、张洪波、刘柏呈、孙献忠',rdSec:'刘光旭',cppcc:'（暂缺）',cppccDep:'孟晓林、珠康·土登克珠、阿旺、白玛旺堆、俞允贵、王刚、达娃欧珠',cp:'7地级市',seat:'拉萨市'},
-'610000':{n:'陕西省',p:'3950万',a:'20.56万km2',g:'3.55万亿',sec:'赵一德',secDep:'赵刚、邢善萍',secComm:'王晓、王兴宁、孙大光、蒿慧杰、张伟、唐书海、王海鹏',gov:'赵刚',govDep:'王晓（常务）、徐明非、李钧、李九红、武文罡',govSec:'吕来升',rd:'赵一德',rdDep:'庄长兴、刘强、郭青、樊维斌、杨广亭',rdSec:'韩一兵',cppcc:'徐新荣',cppccDep:'李明远、杨冠军、张晓光、高岭',cp:'10地级市',seat:'西安市'},
-'620000':{n:'甘肃省',p:'2460万',a:'42.58万km2',g:'1.19万亿',sec:'胡昌升',secDep:'任振鹤、石谋军',secComm:'雷东生、程晓波、孙雪涛、刘长根、张永霞、张晓强、靳国卫、刘建伟、李刚',gov:'任振鹤',govDep:'程晓波（常务）、王钧、王兵、王旭、葛建团',govSec:'张伟文',rd:'胡昌升',rdDep:'嘉木样·洛桑久美·图丹却吉尼玛、胡焯、李沛兴、戴超、丁巨胜',rdSec:'刘永杰',cppcc:'庄国泰',cppccDep:'何伟、马文云、王锐、尚勋武、贠建民、霍卫平、刘仲奎、吴万华',cppccSec:'黄泽元',cp:'14地级市',seat:'兰州市'},
-'630000':{n:'青海省',p:'592万',a:'72.23万km2',g:'0.40万亿',sec:'吴晓军',secDep:'罗东川、刘奇凡',secComm:'刘美频、王卫东、张锦刚、才让太、王大南、乌拉孜别克·热苏力汗、班果、朱向峰、何录春、曹俊',gov:'罗东川',govDep:'张锦刚（常务）、才让太、刘涛、杨志文、刘超、李宏亚、王海红、程基伟',govSec:'苏全仁',rd:'吴晓军',rdDep:'杨逢春、刘同德、张黄元、王敬斋、蔡成勇',rdSec:'陈东昌',cppcc:'（待更新）',cppccDep:'（近期调整中）',cp:'8地级市',seat:'西宁市'},
-'640000':{n:'宁夏',p:'729万',a:'6.64万km2',g:'0.57万亿',sec:'李邑飞',secDep:'张雨浦、庄严',secComm:'艾俊涛、陈春平、买彦州、郭建军、赵旭辉、朱天舒、窦敬丽、白学贵',gov:'张雨浦',govDep:'陈春平（常务）、买彦州、王立、刘军、马宗保、褚伟、吴澜',govSec:'马金元',rd:'李邑飞',rdDep:'王和山、杨玉经、沈左权、马文娟、杜银杰',rdSec:'王文宇',cppcc:'陈雍',cppccDep:'王和山、洪洋、刘可为、马秀珍、郑震、许宁、马文娟、陆军、杨淑丽、李晓波',cppccSec:'曹志斌',cp:'5地级市',seat:'银川市'},
-'650000':{n:'新疆',p:'2600万',a:'166万km2',g:'2.17万亿',sec:'陈小江',secDep:'艾尔肯·吐尼亚孜、何忠友、陈明国、张柱',secComm:'田湘利、王建新、张迎春、玉苏甫江·麦麦提、伊力扎提·艾合买提江、哈丹·卡宾、王琳、王刚、杨诚',gov:'艾尔肯·吐尼亚孜',govDep:'张迎春、玉苏甫江·麦麦提、木合亚提·加尔木哈买提、薛斌、凯赛尔·阿不都克热木、朱立凡、潘曦、聂壮、克衣色尔·克尤木',govSec:'王岿然',rd:'祖木热提·吾布力',rdDep:'王明山、李宁平、迪力夏提·柯德尔汗、平新来、王国和、买买提明·卡德、艾尼瓦尔·吐尔逊、宋亚君',rdSec:'王江',cppcc:'努尔兰·阿不都满金',cppccDep:'彭家瑞、吉尔拉·衣沙木丁、孔星隆、窦万贵、邱树华、杨勇、阿不都热克甫·吐木尼牙孜、艾则孜·木沙、刘会军、刘见明、蒲雪梅、许咸宜、金之镇、艾尼玩·伊布拉音、王贵驷、库兰·赛富汗',cppccSec:'--',cp:'14地级市',seat:'乌鲁木齐市'},
-'710000':{n:'台湾省',p:'2341万',a:'3.6万km2',g:'--',cp:'--',seat:'--'},
-'810000':{n:'香港',p:'750万',a:'0.11万km2',g:'--',gov:'李家超',cp:'18区',seat:'中西区'},
-'820000':{n:'澳门',p:'70万',a:'33.3km2',g:'--',gov:'岑浩辉',cp:'7堂区',seat:'花地玛堂区'}
+// ============================================================
+//  CHINA ADMINISTRATIVE DIVISION DATABASE TERMINAL
+// ============================================================
+(function(){
+'use strict';
+
+// ------ STATE ------
+var state = {
+  layer: 'province',       // province | prefecture | county
+  geoData: {},             // { province: geojson, prefecture: geojson, county: geojson }
+  allDivisions: {},        // { adcode: { adcode, name, level, parent, ... } }
+  provinceList: [],        // [{adcode, name}]
+  prefectureList: [],      // [{adcode, name, parent}]
+  countyList: [],          // [{adcode, name, parent}]
+  leaderData: {},          // from scraped_data.json
+  selectedAdcode: null,
+  expandedProvince: null,
+  currentList: [],         // current displayed list
+  compareSlots: [],
+  chart: null,
+  stats: { prov:34, pref:0, cnty:0, total:0 }
 };
-// ========== 市级数据（主要城市） ==========
-var C={
-'330100':{n:'杭州市',p:'1262万',a:'1.69万km2',g:'2.19万亿',sec:'刘非',gov:'杜旭亮（代）',rd:'李火林',cppcc:'马卫光',cp:'13区县',seat:'上城区'},
-'330200':{n:'宁波市',p:'977万',a:'0.98万km2',g:'1.82万亿',sec:'王成（兼）',gov:'汤飞帆',rd:'张平',cppcc:'陈龙',cp:'10区县',seat:'鄞州区'},
-'330300':{n:'温州市',p:'976万',a:'1.21万km2',g:'0.97万亿',sec:'张振丰',gov:'张文杰',rd:'葛益平',cppcc:'陈作荣',cp:'12区县',seat:'鹿城区'},
-'330400':{n:'嘉兴市',p:'558万',a:'0.39万km2',g:'0.78万亿',sec:'陈伟',gov:'许小月',rd:'高玲慧',cppcc:'陈利众',cp:'7区县',seat:'南湖区'},
-'330500':{n:'湖州市',p:'345万',a:'0.58万km2',g:'0.43万亿',sec:'陈浩',gov:'连坤明',rd:'孙贤龙',cppcc:'李上葵',cp:'5区县',seat:'吴兴区'},
-'330600':{n:'绍兴市',p:'537万',a:'0.83万km2',g:'0.84万亿',sec:'施惠芳',gov:'吴登芬',rd:'谭志桂',cppcc:'魏伟',cp:'6区县',seat:'越城区'},
-'330700':{n:'金华市',p:'716万',a:'1.09万km2',g:'0.67万亿',sec:'朱重烈',gov:'张健',rd:'陈玲玲',cppcc:'宋志恒',cp:'9区县',seat:'婺城区'},
-'330800':{n:'衢州市',p:'229万',a:'0.88万km2',g:'0.23万亿',sec:'高屹',gov:'徐张艳',rd:'吴国升',cppcc:'方健忠',cp:'6区县',seat:'柯城区'},
-'330900':{n:'舟山市',p:'118万',a:'2.22万km2',g:'0.23万亿',sec:'陈重',gov:'徐仁标',rd:'张明超',cppcc:'王伟',cp:'4区县',seat:'定海区'},
-'331000':{n:'台州市',p:'673万',a:'1.0万km2',g:'0.68万亿',sec:'沈铭权',gov:'王健',rd:'吴海平',cppcc:'叶海燕',cp:'9区县',seat:'椒江区'},
-'331100':{n:'丽水市',p:'252万',a:'1.73万km2',g:'0.21万亿',sec:'吴舜泽',gov:'朱林森',rd:'李锋',cppcc:'任淑女',cp:'9区县',seat:'莲都区'},
-'440100':{n:'广州市',p:'1898万',a:'0.74万km2',g:'3.12万亿',sec:'郭永航',gov:'孙志洋',rd:'王衍诗',cppcc:'李贻伟',cp:'11区',seat:'越秀区'},
-'440300':{n:'深圳市',p:'1790万',a:'0.20万km2',g:'3.68万亿',sec:'孟凡利（兼）',gov:'覃伟中',rd:'骆文智',cppcc:'林洁',cp:'9区',seat:'福田区'},
-'440400':{n:'珠海市',p:'252万',a:'0.17万km2',g:'0.44万亿',sec:'陈勇',gov:'黄志豪',rd:'潘江',cppcc:'王开洲',cp:'3区',seat:'香洲区'},
-'510100':{n:'成都市',p:'2147万',a:'1.43万km2',g:'2.35万亿',sec:'曹立军',gov:'王凤朝',rd:'包惠',cppcc:'张剡',cp:'20区县',seat:'高新区'},
-'420100':{n:'武汉市',p:'1380万',a:'0.85万km2',g:'2.12万亿',sec:'郭元强',gov:'盛阅春',rd:'胡立山',cppcc:'杨智',cp:'13区',seat:'江岸区'},
-'320100':{n:'南京市',p:'955万',a:'0.66万km2',g:'1.85万亿',sec:'周红波（兼）',gov:'李忠军',rd:'龙翔',cppcc:'王立平',cp:'11区',seat:'玄武区'},
-'430100':{n:'长沙市',p:'1052万',a:'1.18万km2',g:'1.60万亿',sec:'吴桂英',gov:'周海兵',rd:'文树勋',cppcc:'陈刚',cp:'9区县',seat:'岳麓区'},
-'370100':{n:'济南市',p:'945万',a:'1.02万km2',g:'1.36万亿',sec:'刘强',gov:'于海田',rd:'韩金峰',cppcc:'雷杰',cp:'12区县',seat:'历下区'},
-'370200':{n:'青岛市',p:'1035万',a:'1.13万km2',g:'1.67万亿',sec:'曾赞荣',gov:'赵豪志',rd:'王鲁明',cppcc:'孟庆斌',cp:'10区市',seat:'市南区'},
-'350100':{n:'福州市',p:'850万',a:'1.20万km2',g:'1.33万亿',sec:'郭宁宁',gov:'吴贤德',rd:'张忠',cppcc:'刘卓群',cp:'13区县',seat:'鼓楼区'},
-'350200':{n:'厦门市',p:'535万',a:'0.17万km2',g:'0.86万亿',sec:'崔永辉',gov:'伍斌',rd:'杨国豪',cppcc:'魏克良',cp:'6区',seat:'思明区'},
-'410100':{n:'郑州市',p:'1290万',a:'0.76万km2',g:'1.45万亿',sec:'安伟',gov:'何雄',rd:'周富强',cppcc:'杜新军',cp:'12区县',seat:'中原区'},
-'340100':{n:'合肥市',p:'970万',a:'1.14万km2',g:'1.35万亿',sec:'张红文',gov:'罗云峰',rd:'汪卫东',cppcc:'韩冰',cp:'9区县',seat:'蜀山区'},
-'210100':{n:'沈阳市',p:'920万',a:'1.29万km2',g:'0.90万亿',sec:'王新伟',gov:'吕志成',rd:'范继英',cppcc:'于学利',cp:'13区县',seat:'浑南区'},
-'230100':{n:'哈尔滨市',p:'990万',a:'5.31万km2',g:'0.60万亿',sec:'于洪涛',gov:'王合生',rd:'孙喆',cppcc:'孙珅',cp:'18区县',seat:'松北区'},
-'220100':{n:'长春市',p:'910万',a:'2.47万km2',g:'0.75万亿',sec:'张恩惠',gov:'王子联',rd:'王志厚',cppcc:'高志国',cp:'11区县',seat:'南关区'},
-'360100':{n:'南昌市',p:'660万',a:'0.72万km2',g:'0.82万亿',sec:'李红军',gov:'高世文',rd:'李镇发',cppcc:'卢伟平',cp:'9区县',seat:'红谷滩区'},
-'140100':{n:'太原市',p:'545万',a:'0.70万km2',g:'0.58万亿',sec:'韦韬',gov:'范兆森',rd:'魏民',cppcc:'操学诚',cp:'10区县',seat:'杏花岭区'},
-'130100':{n:'石家庄市',p:'1125万',a:'1.58万km2',g:'0.78万亿',sec:'张超超',gov:'马宇骏',rd:'李雪荣',cppcc:'张业',cp:'14区县',seat:'长安区'},
-'450100':{n:'南宁市',p:'895万',a:'2.21万km2',g:'0.59万亿',sec:'农生文',gov:'侯刚',rd:'冯学军',cppcc:'杨维超',cp:'12区县',seat:'青秀区'},
-'460100':{n:'海口市',p:'295万',a:'0.23万km2',g:'0.24万亿',sec:'范少军',gov:'丁晖',rd:'王艳萍',cppcc:'郭燕红',cp:'4区',seat:'秀英区'},
-'460200':{n:'三亚市',p:'110万',a:'0.19万km2',g:'0.10万亿',sec:'王祺扬',gov:'陈希',rd:'刘耿',cppcc:'林海宁',cp:'4区',seat:'吉阳区'},
-'620100':{n:'兰州市',p:'440万',a:'1.31万km2',g:'0.39万亿',sec:'张晓强',gov:'刘建勋',rd:'周学海',cppcc:'王宏',cp:'8区县',seat:'城关区'},
-'150100':{n:'呼和浩特市',p:'360万',a:'1.72万km2',g:'0.42万亿',sec:'包钢',gov:'贺海东',rd:'常培忠',cppcc:'李炯',cp:'9区县',seat:'新城区'},
-'630100':{n:'西宁市',p:'250万',a:'0.77万km2',g:'0.19万亿',sec:'王卫东',gov:'石建平',rd:'宋晨曦',cppcc:'段发达',cp:'7区县',seat:'城中区'},
-'640100':{n:'银川市',p:'293万',a:'0.90万km2',g:'0.30万亿',sec:'赵旭辉',gov:'陶少华',rd:'马和清',cppcc:'魏和清',cp:'6区县',seat:'金凤区'},
-'650100':{n:'乌鲁木齐市',p:'410万',a:'1.38万km2',g:'0.43万亿',sec:'张柱',gov:'牙合甫·排都拉',rd:'阿合买提江·阿合尼牙孜',cppcc:'高培香',cp:'8区县',seat:'水磨沟区'},
-'540100':{n:'拉萨市',p:'90万',a:'2.95万km2',g:'0.09万亿',sec:'肖友才',gov:'王强',rd:'贺鹏',cppcc:'江拥洛追',cp:'8区县',seat:'城关区'},
-'610100':{n:'西安市',p:'1320万',a:'1.01万km2',g:'1.33万亿',sec:'蒿慧杰（兼）',gov:'叶牛平',rd:'韩松',cppcc:'王吉德',cp:'13区县',seat:'未央区'},
-'610200':{n:'铜川市',p:'70万',a:'0.39万km2',g:'0.04万亿',sec:'郝光耀',gov:'刘丽',rd:'--',cppcc:'--',cp:'4区县',seat:'耀州区'},
-'610300':{n:'宝鸡市',p:'328万',a:'1.81万km2',g:'0.28万亿',sec:'陈晓勇',gov:'牛恺',rd:'--',cppcc:'--',cp:'13区县',seat:'金台区'},
-'610400':{n:'咸阳市',p:'396万',a:'1.03万km2',g:'0.29万亿',sec:'冷劲松',gov:'贾珉亮',rd:'--',cppcc:'--',cp:'14区县',seat:'秦都区'},
-'610500':{n:'渭南市',p:'469万',a:'1.30万km2',g:'0.22万亿',sec:'王浩',gov:'王心',rd:'--',cppcc:'--',cp:'11区县',seat:'临渭区'},
-'610600':{n:'延安市',p:'228万',a:'3.70万km2',g:'0.24万亿',sec:'王海鹏（兼）',gov:'郭柱国',rd:'--',cppcc:'--',cp:'13区县',seat:'宝塔区'},
-'610700':{n:'汉中市',p:'321万',a:'2.72万km2',g:'0.20万亿',sec:'张烨',gov:'王建平',rd:'--',cppcc:'--',cp:'11区县',seat:'汉台区'},
-'610800':{n:'榆林市',p:'362万',a:'4.29万km2',g:'0.75万亿',sec:'张胜利',gov:'马月逢',rd:'--',cppcc:'--',cp:'12区县',seat:'榆阳区'},
-'610900':{n:'安康市',p:'249万',a:'2.35万km2',g:'0.14万亿',sec:'柯昌万',gov:'张小平',rd:'--',cppcc:'--',cp:'10区县',seat:'汉滨区'},
-'611000':{n:'商洛市',p:'204万',a:'1.96万km2',g:'0.09万亿',sec:'周宇松',gov:'赵孝',rd:'--',cppcc:'--',cp:'7区县',seat:'商州区'}
-};
-var CY={};
 
-// ========== 数据加载 ==========
-var apiBase = window.location.origin;
-var lastUpdateTime = null;
+// ------ DOM ------
+var $mapCanvas = document.getElementById('mapCanvas');
+var $tooltip = document.getElementById('mapTooltip');
+var $dataList = document.getElementById('dataList');
+var $dataPanel = document.getElementById('dataPanel');
+var $searchInput = document.getElementById('searchInput');
+var $compareOverlay = document.getElementById('compareOverlay');
+var $compareBody = document.getElementById('compareBody');
+var $panelBadge = document.getElementById('panelBadge');
 
-async function loadApiData() {
-  try {
-    var resp = await fetch(apiBase + '/api/all');
-    if (resp.ok) {
-      var json = await resp.json();
-      if (json.code === 0 && json.data) { mergeData(json.data); lastUpdateTime = json.data.lastUpdate; return; }
-    }
-  } catch (e) {}
-  try {
-    var sresp = await fetch('./scraped_data.json');
-    if (sresp.ok) { var sjson = await sresp.json(); mergeData(sjson); lastUpdateTime = sjson.lastUpdate; }
-  } catch (e) {}
+// ------ HELPERS ------
+function pad2(n){ return String(n).padStart(2,'0'); }
+function adcodeProv(c){ return String(c).substring(0,2)+'0000'; }
+function adcodePref(c){ return String(c).substring(0,4)+'00'; }
+function getProvCode(c){ return String(c).substring(0,2); }
+function getPrefCode(c){ return String(c).substring(0,4); }
+
+// ------ INIT ------
+function init(){
+  loadAllGeoJSON().then(function(){
+    computeStats();
+    updateStatsBar();
+    updateStatusBar();
+    initMap();
+    renderList();
+    bindEvents();
+  });
+  loadLeaderData();
 }
 
-function mergeData(data) {
-  if (data.provinces) { for (var k in data.provinces) { if (data.provinces[k] && data.provinces[k].n) { D[k] = Object.assign(D[k] || {}, data.provinces[k]); } } }
-  if (data.cities) { for (var k in data.cities) { if (data.cities[k] && data.cities[k].n) { C[k] = Object.assign(C[k] || {}, data.cities[k]); } } }
+// ------ LOAD GEOJSON ------
+function loadAllGeoJSON(){
+  return Promise.all([
+    fetch('./china_provinces.json?v=3').then(r=>r.json()),
+    fetch('./china_cities.json?v=3').then(r=>r.json()),
+    fetch('./china_counties.json?v=3').then(r=>r.json())
+  ]).then(function(rs){
+    state.geoData.province = rs[0];
+    state.geoData.prefAll = rs[1];
+    state.geoData.county = rs[2];
+    buildDivisionIndex();
+  });
 }
 
-var chart=null,chinaGeo=null;
-var currentZoom=1.0;
-var expandedProvinces={};
-var expandedCities={};
-var currentMode='province';
-var cityGeo=null;
-var selectedAdcode=null;
-var showLabels=true;
-var cachedListHtml='';
-var compareMode=false;
-var compareItems=[];
-var compareChart=null;
-var breadcrumbStack=[];
+function buildDivisionIndex(){
+  var idx = state.allDivisions;
+  var pl = [], pfl = [], ctl = [];
 
-function gd(a,t){return t==='province'?D[a]:(t==='city'||t==='county'?C[a]:CY[a]);}
+  // Provinces
+  (state.geoData.province.features||[]).forEach(function(f){
+    var p = f.properties||{};
+    var c = String(p.adcode||'');
+    var n = p.name||'';
+    if(!c||!n)return;
+    idx[c] = { adcode:c, name:n, level:'province', parent:'100000', childrenNum:p.childrenNum||0 };
+    pl.push({adcode:c, name:n});
+  });
 
-function getLevelLabel(code){
-  if(code==='100000')return '国家';
-  if(code.substring(2)==='0000')return '省级';
-  if(code.substring(4)==='00')return '地级';
-  return '县级';
-}
-function getLevelName(code){
-  if(code==='100000')return 'country';
-  if(code.substring(2)==='0000')return 'province';
-  if(code.substring(4)==='00')return 'city';
-  return 'county';
-}
-
-function updateBreadcrumb(a,n,t){
-  var el=document.getElementById('breadcrumb');
-  var html='<span class="bc-item bc-path" onclick="toHome()">中国</span>';
-  if(a){
-    var parts=[];
-    var pa=a.substring(0,2)+'0000';
-    if(a!==pa&&getLevelName(a)==='county'){
-      if(D[pa])parts.push({c:pa,n:D[pa].n});
-      else parts.push({c:pa,n:''});
-      if(C[a.substring(0,4)+'00'])parts.push({c:a.substring(0,4)+'00',n:C[a.substring(0,4)+'00'].n});
-      else parts.push({c:a.substring(0,4)+'00',n:''});
-      parts.push({c:a,n:n});
-    }else if(getLevelName(a)==='city'||(a.substring(2)!=='0000'&&a.substring(4)==='00')){
-      if(D[pa])parts.push({c:pa,n:D[pa].n});
-      else parts.push({c:pa,n:''});
-      parts.push({c:a,n:n});
-    }else if(getLevelName(a)==='province'){
-      parts.push({c:a,n:n});
-    }
-    for(var i=0;i<parts.length;i++){
-      html+='<span class="bc-sep">\u203a</span>';
-      html+='<span class="bc-item" onclick="handleClick(\''+parts[i].c+'\',\''+(parts[i].n||'')+'\')">'+(parts[i].n||parts[i].c)+'</span>';
-    }
-  }
-  if(lastUpdateTime){
-    var d=new Date(lastUpdateTime);
-    html+='<span class="bc-time">更新: '+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+'</span>';
-  }
-  el.innerHTML=html;
-}
-
-function showDetail(a,n,t){
-  if(compareMode){addCompareItem(a,n,t);return;}
-  var d=gd(a,t);
-  var levelLabel=getLevelLabel(a);
-  var tl=levelLabel;
-  document.getElementById('rightPanelTitle').textContent=n;
-  document.getElementById('rightPanelBadge').textContent=tl;
-  var el=document.getElementById('rightPanelContent');
-  if(!d){
-    var pa=a.substring(0,2)+'0000';
-    var pc=D[pa]?D[pa].n:'';
-    el.innerHTML='<div class="detail-section">'+
-      '<div class="detail-header"><div class="detail-name">'+n+'</div>'+
-      (pc?'<div class="detail-parent">'+pc+'</div>':'')+
-      '</div>'+
-      '<hr class="detail-divider">'+
-      '<div class="detail-field"><span class="df-label">编码</span><span class="df-value" style="font-family:var(--font-mono)">'+a+'</span></div>'+
-      '<div class="detail-field"><span class="df-label">级别</span><span class="df-value">'+levelLabel+'</span></div>'+
-      (pc?'<div class="detail-field"><span class="df-label">上级</span><span class="df-value">'+pc+'</span></div>':'')+
-      '<hr class="detail-divider">'+
-      '<div style="padding:12px 0;color:var(--text-muted);font-size:12px">该行政区领导数据尚未采集</div>'+
-      '<hr class="detail-divider">'+
-      '<div class="detail-path"><span class="bc-path">中国</span>'+
-      (pc?'<span class="dp-arrow">\u2192</span><span>'+pc+'</span>':'')+
-      '<span class="dp-arrow">\u2192</span><span>'+n+'</span></div>'+
-      '</div>'+
-      '<div class="detail-footer"><div class="detail-footer-text">China Administrative Division Database</div></div>';
-    updateBreadcrumb(a,n,t);
-    return;
-  }
-  var pa=a.substring(0,2)+'0000';
-  var pc=D[pa]?D[pa].n:'';
-  var cc='';
-  if(getLevelName(a)==='county'){
-    var cityCode=a.substring(0,4)+'00';
-    cc=C[cityCode]?C[cityCode].n:'';
-  }
-  var h='<div class="detail-section">'+
-    '<div class="detail-header"><div class="detail-name">'+d.n+'</div>'+
-    (pc?'<div class="detail-parent">'+pc+'</div>':'')+
-    '</div>'+
-    '<hr class="detail-divider">'+
-    '<div class="detail-field"><span class="df-label">编码</span><span class="df-value" style="font-family:var(--font-mono)">'+a+'</span></div>'+
-    '<div class="detail-field"><span class="df-label">级别</span><span class="df-value">'+levelLabel+'</span></div>';
-  if(pc)h+='<div class="detail-field"><span class="df-label">上级</span><span class="df-value">'+pc+'</span></div>';
-  if(cc)h+='<div class="detail-field"><span class="df-label">所属地级</span><span class="df-value">'+cc+'</span></div>';
-  if(d.p)h+='<div class="detail-field"><span class="df-label">人口</span><span class="df-value">'+d.p+'</span></div>';
-  if(d.a)h+='<div class="detail-field"><span class="df-label">面积</span><span class="df-value">'+d.a+'</span></div>';
-  if(d.g)h+='<div class="detail-field"><span class="df-label">GDP</span><span class="df-value">'+d.g+'</span></div>';
-  if(d.cp)h+='<div class="detail-field"><span class="df-label">区划</span><span class="df-value">'+d.cp+'</span></div>';
-  if(d.seat)h+='<div class="detail-field"><span class="df-label">驻地</span><span class="df-value">'+d.seat+'</span></div>';
-  if(d.sec||d.gov||d.rd||d.cppcc){
-    h+='<hr class="detail-divider">';
-    var secLabel='书记',govLabel='首长';
-    if(t==='province'||levelLabel==='省级'){
-      if(n.indexOf('自治区')>=0||n==='广西'||n==='内蒙古'||n==='西藏'||n==='宁夏'||n==='新疆'){secLabel='自治区党委书记';govLabel='自治区主席';}
-      else if(n.indexOf('市')>=0&&(n.indexOf('北京')>=0||n.indexOf('天津')>=0||n.indexOf('上海')>=0||n.indexOf('重庆')>=0)){secLabel='市委书记';govLabel='市长';}
-      else if(n.indexOf('省')>=0){secLabel='省委书记';govLabel='省长';}
-      else if(n.indexOf('香港')>=0||n.indexOf('澳门')>=0){secLabel='行政长官';govLabel='行政长官';}
-    }else if(t==='city'||levelLabel==='地级'){
-      if(n.indexOf('自治州')>=0||n.indexOf('州')>=0){secLabel='州委书记';govLabel='州长';}
-      else if(n.indexOf('盟')>=0){secLabel='盟委书记';govLabel='盟长';}
-      else if(n.indexOf('地区')>=0){secLabel='地委书记';govLabel='行署专员';}
-      else{secLabel='市委书记';govLabel='市长';}
-    }else if(levelLabel==='县级'){
-      if(n.indexOf('区')>=0&&n.indexOf('市')<0){secLabel='区委书记';govLabel='区长';}
-      else if(n.indexOf('县')>=0||n.indexOf('旗')>=0){secLabel='县委书记';govLabel='县长';}
-      else if(n.indexOf('市')>=0){secLabel='市委书记';govLabel='市长';}
-    }
-    if(d.sec)h+='<div class="detail-field"><span class="df-label">'+secLabel+'</span><span class="df-value">'+d.sec+'</span></div>';
-    if(d.secDep)h+='<div class="detail-field"><span class="df-label">副'+secLabel.replace('书记','')+'副书记</span><span class="df-value">'+d.secDep+'</span></div>';
-    if(d.gov)h+='<div class="detail-field"><span class="df-label">'+govLabel+'</span><span class="df-value">'+d.gov+'</span></div>';
-    if(d.govDep)h+='<div class="detail-field" style="flex-wrap:wrap"><span class="df-label">副'+govLabel+'</span><span class="df-value" style="max-width:65%;text-align:right;word-break:break-all">'+d.govDep+'</span></div>';
-    if(d.rd)h+='<div class="detail-field"><span class="df-label">人大常委会主任</span><span class="df-value">'+d.rd+'</span></div>';
-    if(d.cppcc)h+='<div class="detail-field"><span class="df-label">政协主席</span><span class="df-value">'+d.cppcc+'</span></div>';
-  }
-  h+='<hr class="detail-divider">'+
-    '<div class="detail-path">';
-  h+='<span class="bc-path">中国</span>';
-  if(pc){h+='<span class="dp-arrow">\u2192</span><span>'+pc+'</span>';}
-  if(cc){h+='<span class="dp-arrow">\u2192</span><span>'+cc+'</span>';}
-  h+='<span class="dp-arrow">\u2192</span><span>'+d.n+'</span>';
-  h+='</div></div>'+
-    '<div class="detail-footer"><div class="detail-footer-text">China Administrative Division Database</div></div>';
-  el.innerHTML=h;
-  updateBreadcrumb(a,n,t);
-}
-
-// ========== 地图渲染 ==========
-function setMapMode(mode){
-  currentMode=mode;
-  document.getElementById('modeProvince').className='toolbar-btn'+(mode==='province'?' active':'');
-  document.getElementById('modeCity').className='toolbar-btn'+(mode==='city'?' active':'');
-  expandedProvinces={};
-  expandedCities={};
-  if(mode==='province'){
-    if(chinaGeo)renderAll();
-  }else if(mode==='city'){
-    if(cityGeo){renderAll();return;}
-    fetch('./china_cities.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){cityGeo=gd;renderAll();}).catch(function(){
-      fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full_city.json').then(function(r2){if(!r2.ok)throw Error('');return r2.json();}).then(function(gd2){cityGeo=gd2;renderAll();}).catch(function(){loadAllCitiesGeo();});
-    });
-  }
-}
-
-function loadAllCitiesGeo(){
-  if(!chinaGeo)return;
-  document.getElementById('rightPanelContent').innerHTML='<div class="empty-state">正在加载全国市级数据...</div>';
-  var muniAdcodes={'110000':1,'120000':1,'310000':1,'500000':1};
-  var muniFeats=[],loadAdcodes=[];
-  for(var i=0;i<chinaGeo.features.length;i++){
-    var f=chinaGeo.features[i],a=String(f.properties.adcode||f.properties.id||''),aname=f.properties.name||'';
-    if((a==='110000'||a==='120000'||a==='310000'||a==='500000')||aname==='北京市'||aname==='天津市'||aname==='上海市'||aname==='重庆市'){muniFeats.push(f);}
-    else if(a&&a.length===6&&a.substring(2)==='0000'){loadAdcodes.push(a);}
-  }
-  var allFeats=[],done=0,total=loadAdcodes.length;
-  function loadNext(idx){
-    if(idx>=total){var finalFeats=muniFeats.slice().concat(allFeats);cityGeo={type:'FeatureCollection',features:finalFeats};renderAll();return;}
-    fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+loadAdcodes[idx]+'_full.json').then(function(r){if(r.ok)return r.json();return null;}).then(function(gd){if(gd&&gd.features)allFeats=allFeats.concat(gd.features);done++;if(done%5===0||done===total){document.getElementById('rightPanelContent').innerHTML='<div class="empty-state">加载市级数据 '+done+'/'+total+'...</div>';}loadNext(idx+1);}).catch(function(){done++;loadNext(idx+1);});
-  }
-  if(total>0)loadNext(0);
-  else{var finalFeats=muniFeats.slice();cityGeo={type:'FeatureCollection',features:finalFeats};renderAll();}
-}
-
-function buildFeatures(){
-  var src=currentMode==='city'&&cityGeo?cityGeo:chinaGeo;
-  if(!src)return [];
-  var feats=[];
-  for(var i=0;i<src.features.length;i++)feats.push(src.features[i]);
-  for(var prov in expandedProvinces){var cfs=expandedProvinces[prov];if(cfs&&cfs.length>0){for(var j=0;j<cfs.length;j++)feats.push(cfs[j]);}}
-  for(var city in expandedCities){var cdfs=expandedCities[city];if(cdfs&&cdfs.length>0){for(var k=0;k<cdfs.length;k++)feats.push(cdfs[k]);}}
-  return feats;
-}
-
-function expandProvince(pa){
-  if(expandedProvinces[pa])return Promise.resolve(expandedProvinces[pa]);
-  if(window._chinaCities)return Promise.resolve(expandProvinceLocal(pa));
-  return fetch('./china_cities.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){window._chinaCities=gd;return expandProvinceLocal(pa);}).catch(function(){return null;});
-}
-function expandProvinceLocal(pa){
-  if(!window._chinaCities)return null;
-  var prefix=pa.substring(0,2);
-  var feats=window._chinaCities.features.filter(function(f){var a=String(f.properties.adcode||f.properties.id||'');return a.substring(0,2)===prefix&&a!==pa&&a.substring(2)!=='0000'&&a.substring(4)==='00';});
-  expandedProvinces[pa]=feats;
-  return feats;
-}
-
-function expandCity(ca){
-  if(expandedCities[ca])return Promise.resolve(expandedCities[ca]);
-  return fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+ca+'_full.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){expandedCities[ca]=gd.features||[];return expandedCities[ca];}).catch(function(){return loadCountiesFromLocal(ca);});
-}
-
-function loadCountiesFromLocal(ca){
-  if(window._counties){return Promise.resolve(filterCounties(ca));}
-  return fetch('./china_counties.json?v=2').then(function(r){if(!r.ok)throw Error('HTTP '+r.status);return r.json();}).then(function(gd){window._counties=gd;return filterCounties(ca);}).catch(function(){return null;});
-}
-
-function filterCounties(ca){
-  if(!window._counties)return null;
-  var feats=window._counties.features.filter(function(f){return f._c===ca;});
-  if(feats.length>0)expandedCities[ca]=feats;
-  return feats.length>0?feats:null;
-}
-
-function renderAll(){
-  if(!chart && typeof echarts!=='undefined'){try{chart=echarts.init(document.getElementById('map'));window.addEventListener('resize',function(){if(chart)chart.resize();});}catch(e){}}
-  var geoData=currentMode==='city'&&cityGeo?cityGeo:chinaGeo;
-  if(!chart){renderSidebar();return;}
-  if(!geoData){renderSidebar();return;}
-  var feats=buildFeatures();
-  var md={type:'FeatureCollection',features:feats};
-  try{echarts.registerMap('m',md);}catch(e){}
-  var regions=feats.map(function(f){var p=f.properties||{};return{a:String(p.adcode||p.id||''),n:p.name||''};}).filter(function(r){return r.n;});
-  var expandedKeys={};
-  for(var p in expandedProvinces){expandedKeys[p]=1;expandedProvinces[p].forEach(function(f){expandedKeys[String(f.properties.adcode||f.properties.id||'')]=1;});}
-  for(var c in expandedCities){expandedKeys[c]=1;expandedCities[c].forEach(function(f){expandedKeys[String(f.properties.adcode||f.properties.id||'')]=1;});}
-  
-  // Map colors - dark professional theme
-  var isDark=document.body.classList.contains('dark');
-  
-  var data=regions.map(function(r){
-    var isExp=!!expandedKeys[r.a];
-    var pv=r.a.substring(2)==='0000',ct=(!pv&&r.a.substring(4)==='00');
-    var isSelected=(r.a===selectedAdcode);
-    
-    if(isSelected){
-      return {
-        name:r.n,adcode:r.a,
-        itemStyle:{
-          areaColor:isDark?'rgba(211,47,47,0.18)':'rgba(211,47,47,0.12)',
-          borderColor:'#D32F2F',
-          borderWidth:2.5
-        }
-      };
-    }
-    if(isExp){
-      // Hide parent label
-      if((pv&&expandedProvinces[r.a])||(ct&&expandedCities[r.a])){
-        return {name:r.n,adcode:r.a,itemStyle:{borderColor:'#D32F2F',borderWidth:1.5},label:{show:true,fontSize:0,color:'transparent'}};
-      }
-      // Child regions get orange border
-      return {name:r.n,adcode:r.a,itemStyle:{borderColor:'#E65100',borderWidth:1.2}};
-    }else{
-      var bc='#404040',bw=1.0;
-      if(pv){bc='#505050';bw=1.2;}
-      return {name:r.n,adcode:r.a,itemStyle:{borderColor:bc,borderWidth:bw}};
+  // Prefectures (city level from the prefecture file)
+  (state.geoData.prefAll.features||[]).forEach(function(f){
+    var p = f.properties||{};
+    var c = String(p.adcode||'');
+    var n = p.name||'';
+    if(!c||!n)return;
+    var lv = p.level||'';
+    if(lv==='city'){
+      var parentC = p.parent?String(p.parent.adcode):adcodeProv(c);
+      idx[c] = { adcode:c, name:n, level:'prefecture', parent:parentC, childrenNum:p.childrenNum||0 };
+      pfl.push({adcode:c, name:n, parent:parentC});
     }
   });
-  
-  // Force labels for expanded children
-  for(var i=0;i<data.length;i++){
-    var di=data[i];
-    if(di.adcode&&expandedKeys[di.adcode]){
-      var apv=di.adcode.substring(2)==='0000',act=(!apv&&di.adcode.substring(4)==='00');
-      var isParent=(apv&&expandedProvinces[di.adcode])||(act&&expandedCities[di.adcode]);
-      if(!isParent){
-        di.label={show:true,fontSize:Math.max(8,Math.round(8+currentZoom*0.6)),fontWeight:'bold',color:'#F5F5F5'};
+
+  // Counties (from china_counties.json)
+  if(state.geoData.county&&state.geoData.county.features){
+    state.geoData.county.features.forEach(function(f){
+      var p = f.properties||{};
+      var c = String(p.adcode||'');
+      var n = p.name||'';
+      if(!c||!n)return;
+      var parentC = f._c||adcodePref(c);
+      idx[c] = { adcode:c, name:n, level:'county', parent:parentC };
+      ctl.push({adcode:c, name:n, parent:parentC});
+    });
+  }
+
+  state.provinceList = pl;
+  state.prefectureList = pfl;
+  state.countyList = ctl;
+  state.stats.prov = pl.length;
+  state.stats.pref = pfl.length;
+  state.stats.cnty = ctl.length;
+  state.stats.total = pl.length + pfl.length + ctl.length;
+}
+
+// ------ LOAD LEADER DATA ------
+function loadLeaderData(){
+  fetch('./scraped_data.json?v=3').then(r=>r.json()).then(function(d){
+    state.leaderData = {};
+    if(d&&d.cities){
+      for(var k in d.cities){
+        state.leaderData[k] = d.cities[k];
       }
     }
+    if(d&&d.provinces){
+      for(var k in d.provinces){
+        state.leaderData[k] = d.provinces[k];
+      }
+    }
+    if(d&&d.lastUpdate){
+      document.getElementById('statusUpdated').textContent =
+        new Date(d.lastUpdate).toISOString().substring(0,10);
+    }
+  }).catch(function(){});
+}
+
+// ------ COMPUTE STATS ------
+function computeStats(){
+  document.getElementById('statProv').textContent = state.stats.prov;
+  document.getElementById('statPref').textContent = state.stats.pref;
+  document.getElementById('statCnty').textContent = state.stats.cnty;
+  document.getElementById('statTotal').textContent = state.stats.total;
+}
+
+function updateStatsBar(){
+  document.getElementById('statProv').textContent = state.stats.prov;
+  document.getElementById('statPref').textContent = state.stats.pref;
+  document.getElementById('statCnty').textContent = state.stats.cnty;
+  document.getElementById('statTotal').textContent = state.stats.total;
+}
+
+function updateStatusBar(){
+  document.getElementById('statusVersion').textContent = 'v1.0';
+  document.getElementById('statusCoverage').textContent = '100%';
+  document.getElementById('statusRecords').textContent = state.stats.total;
+  document.getElementById('statusLayer').textContent = state.layer.toUpperCase();
+}
+
+// ------ INIT MAP ------
+function initMap(){
+  state.chart = echarts.init($mapCanvas);
+  registerChinaMap().then(function(){
+    renderMap();
+  });
+}
+
+function registerChinaMap(){
+  return new Promise(function(resolve){
+    echarts.registerMap('china', state.geoData.province);
+    resolve();
+  });
+}
+
+function getDisplayGeo(){
+  if(state.layer==='province'){
+    return state.geoData.province;
+  } else if(state.layer==='prefecture'){
+    return buildPrefectureGeo();
+  } else {
+    return buildCountyGeo();
   }
-  
-  try{echarts.registerMap('m',{type:'FeatureCollection',features:feats});}catch(e){}
-  var curCenter=null;var curZoom=null;
-  try{var opt=chart.getOption();if(opt&&opt.series&&opt.series[0]){if(opt.series[0].zoom!=null)curZoom=opt.series[0].zoom;if(opt.series[0].center)curCenter=opt.series[0].center;}}catch(e){}
-  
-  chart.setOption({
-    backgroundColor:'#111111',
-    tooltip:{trigger:'item',backgroundColor:'rgba(23,23,23,0.96)',borderColor:'#303030',borderWidth:1,textStyle:{color:'#F5F5F5',fontSize:12},formatter:function(p){if(!p.data)return'';return'<b>'+p.name+'</b>';}},
-    series:[{
-      type:'map',map:'m',roam:true,center:curCenter||[104,35],zoom:curZoom||4,selectedMode:false,
-      label:{show:showLabels,color:'#9E9E9E',fontSize:Math.max(7,Math.round(8+currentZoom*0.6)),fontWeight:'normal',fontFamily:'Inter,"Noto Sans SC",sans-serif',formatter:function(p){return p.name;}},
-      itemStyle:{areaColor:'#1A1A1A',borderColor:'#404040',borderWidth:1.0},
-      emphasis:{label:{color:'#F5F5F5',fontWeight:'bold',fontSize:Math.max(9,Math.round(10+currentZoom*0.8))},itemStyle:{areaColor:'rgba(211,47,47,0.25)',borderColor:'#C62828',borderWidth:2}},
-      data:data,animationDuration:120
-    }]
-  },true);
-  chart.off('click');
-  chart.on('click',function(p){if(!p.data||!p.data.adcode)return;handleClick(String(p.data.adcode),p.name);});
-  renderSidebar();
 }
 
-function renderSidebar(){
-  var src=currentMode==='city'&&cityGeo?cityGeo:chinaGeo;
-  var modeLabels={'province':'省级','city':'地级'};
-  var allP=[];
-  if(src){for(var i=0;i<src.features.length;i++){var pf=src.features[i],pa=String(pf.properties.adcode||pf.properties.id||''),pn=pf.properties.name||'';if(pn)allP.push({a:pa,n:pn});}}
-  if(currentMode==='city'){var seen={};for(var i=0;i<allP.length;i++)seen[allP[i].a]=1;for(var k in C){if(!seen[k]&&C[k]&&C[k].n){allP.push({a:k,n:C[k].n});}}}
-  document.getElementById('leftPanelTitle').textContent=modeLabels[currentMode]+'列表';
-  document.getElementById('leftPanelBadge').textContent=modeLabels[currentMode];
-  var ph='<div class="list-title">'+(currentMode==='province'?'PROVINCES':'PREFECTURES')+' <span>('+allP.length+')</span></div>';
-  for(var i=0;i<allP.length;i++){var pv=allP[i],ie=!!expandedProvinces[pv.a];var iec=!!expandedCities[pv.a];ph+='<div class="area-item'+(ie||iec?' expanded':'')+'" onclick="handleClick(\''+pv.a+'\',\''+pv.n+'\')"><div class="ai-name">'+(ie||iec?'\u25BC ':'')+pv.n+'</div></div>';
-    if(ie&&expandedProvinces[pv.a]){var cfs=expandedProvinces[pv.a];for(var ci=0;ci<cfs.length;ci++){var cf=cfs[ci],ca2=String(cf.properties.adcode||cf.properties.id||''),cn2=cf.properties.name||'';if(cn2&&ca2!==pv.a){ph+='<div class="area-item" style="padding:6px 16px 6px 28px;font-size:12px;color:var(--text-secondary)" onclick="handleClick(\''+ca2+'\',\''+cn2+'\')"><div class="ai-name">'+cn2+'</div></div>';}}}
-    if(iec&&expandedCities[pv.a]){var cdfs=expandedCities[pv.a];for(var ci2=0;ci2<cdfs.length;ci2++){var cdf=cdfs[ci2],ca3=String(cdf.properties.adcode||cdf.properties.id||''),cn3=cdf.properties.name||'';if(cn3&&ca3!==pv.a){ph+='<div class="area-item" style="padding:6px 16px 6px 28px;font-size:12px;color:var(--text-secondary)" onclick="handleClick(\''+ca3+'\',\''+cn3+'\')"><div class="ai-name">'+cn3+'</div></div>';}}}
+function buildPrefectureGeo(){
+  var features = [];
+  (state.geoData.prefAll.features||[]).forEach(function(f){
+    var p = f.properties||{};
+    if(p.level==='city'){
+      features.push(f);
+    }
+  });
+  return { type:'FeatureCollection', features:features };
+}
+
+function buildCountyGeo(){
+  if(!state.geoData.county||!state.geoData.county.features){
+    return buildPrefectureGeo();
   }
-  document.getElementById('leftPanelContent').innerHTML=ph;
-  cachedListHtml=ph;
-  document.getElementById('searchInput').value='';
-  document.getElementById('searchInput').placeholder=currentMode==='province'?'搜索省份名称或代码...':'搜索地级行政区名称或代码...';
+  return state.geoData.county;
 }
 
-function toggleProvince(a,n){
-  var pa=a.substring(0,2)+'0000';
-  showDetail(a,n,'province');
-  var muni={'110000':1,'120000':1,'310000':1,'500000':1};
-  if(muni[pa]){for(var p in expandedProvinces){delete expandedProvinces[p];}for(var c in expandedCities){delete expandedCities[c];}renderAll();return;}
-  if(expandedProvinces[pa]){delete expandedProvinces[pa];for(var c in expandedCities){if(c.substring(0,2)===pa.substring(0,2))delete expandedCities[c];}renderAll();return;}
-  for(var p in expandedProvinces){delete expandedProvinces[p];}for(var c in expandedCities){delete expandedCities[c];}
-  expandProvince(pa).then(function(){renderAll();});
+function renderMap(){
+  var geo = getDisplayGeo();
+  var mapName = 'm_'+state.layer;
+  echarts.registerMap(mapName, geo);
+
+  var data = geo.features.map(function(f){
+    var p = f.properties||{};
+    var c = String(p.adcode||'');
+    var sel = (c===state.selectedAdcode);
+    var exp = (state.expandedProvince && c===state.expandedProvince);
+    return {
+      name: p.name||'',
+      value: sel?2:(exp?1:0),
+      adcode: c,
+      level: p.level||state.layer
+    };
+  });
+
+  var opt = {
+    tooltip: { show: false },
+    series: [{
+      type: 'map', map: mapName, roam: true, zoom: 1.2,
+      center: [104.5,37.5],
+      aspectScale: .75, selectedMode: false,
+      itemStyle: { areaColor:'#1A1A1A', borderColor:'#404040', borderWidth:.5 },
+      emphasis: {
+        itemStyle: { areaColor: 'rgba(211,47,47,0.25)', borderColor: '#D32F2F', borderWidth: 2 },
+        label: { show: true, color: '#F5F5F5', fontSize: 11 }
+      },
+      label: {
+        show: state.layer==='province',
+        color: '#606060', fontSize: state.layer==='province'?11:8, fontFamily: 'var(--font-sans)'
+      },
+      data: data,
+      selectedMode: false
+    }],
+    visualMap: { show: false, min:0, max:2, inRange: { color: ['#1A1A1A','#2a1a1a','#3a1515'] } }
+  };
+
+  state.chart.setOption(opt, true);
+
+  // Click handler
+  state.chart.off('click');
+  state.chart.on('click', function(params){
+    if(params.data&&params.data.adcode){
+      handleMapClick(params.data.adcode, params.name);
+    }
+  });
+
+  // Hover handler
+  state.chart.off('mouseover');
+  state.chart.off('mouseout');
+  state.chart.on('mouseover', function(params){
+    if(params.data&&params.data.adcode){
+      showTooltip(params.event.event, params.data.adcode, params.name);
+    }
+  });
+  state.chart.on('mouseout', function(){
+    $tooltip.style.display = 'none';
+  });
+
+  // Update selected visual
+  updateSelectedVisual();
 }
 
-function handleClick(ca,cn){
-  var ip=(ca.substring(2)==='0000'),pa=ca.substring(0,2)+'0000';
-  if(currentMode==='province'){
-    selectedAdcode=ca;
-    if(ip){toggleProvince(ca,cn);}else{showDetail(ca,cn,'city');renderAll();}
+function updateSelectedVisual(){
+  var chart = state.chart;
+  var opt = chart.getOption();
+  var series = opt.series[0];
+  if(!series||!series.data)return;
+  series.data = series.data.map(function(d){
+    d.itemStyle = (String(d.adcode)===String(state.selectedAdcode))
+      ? { areaColor:'rgba(211,47,47,0.18)', borderColor:'#D32F2F', borderWidth:2.5 }
+      : { areaColor:'#1A1A1A', borderColor:'#404040', borderWidth:.5 };
+    d.label = (String(d.adcode)===String(state.selectedAdcode))
+      ? { show:true, color:'#D32F2F', fontSize:12, fontWeight:'bold' }
+      : (state.layer==='province'?{show:true}:{show:false});
+    return d;
+  });
+  chart.setOption(opt);
+}
+
+// ------ TOOLTIP ------
+function showTooltip(e, code, name){
+  if(!e)return;
+  var div = state.allDivisions[code]||{};
+  var provCode = getProvCode(code)+'0000';
+  var provName = (state.allDivisions[provCode]||{}).name||'';
+  var html = '<div class="tt-name">'+name+'</div>';
+  html += '<div class="tt-row"><span class="tt-label">Code</span><span class="tt-value">'+code+'</span></div>';
+  html += '<div class="tt-row"><span class="tt-label">Level</span><span class="tt-value">'+getLevelLabel(code)+'</span></div>';
+  if(provName && code!==provCode){
+    html += '<div class="tt-row"><span class="tt-label">Province</span><span class="tt-value">'+provName+'</span></div>';
+  }
+  if(div.parent&&div.parent!=='100000'){
+    var pn = (state.allDivisions[div.parent]||{}).name||div.parent;
+    html += '<div class="tt-row"><span class="tt-label">Parent</span><span class="tt-value">'+pn+'</span></div>';
+  }
+  $tooltip.innerHTML = html;
+  $tooltip.style.display = 'block';
+  $tooltip.style.left = (e.offsetX+15)+'px';
+  $tooltip.style.top = (e.offsetY+10)+'px';
+}
+
+function getLevelLabel(code){
+  var c = String(code);
+  if(c==='100000')return 'Country';
+  if(/^\d{2}0000$/.test(c))return 'Province';
+  if(/^\d{4}00$/.test(c))return 'Prefecture';
+  return 'County';
+}
+
+// ------ MAP CLICK ------
+function handleMapClick(code, name){
+  state.selectedAdcode = code;
+
+  if(state.layer==='province'){
+    // Expand province to show prefectures
+    expandToPrefecture(code);
+  } else if(state.layer==='prefecture'){
+    // Show detail
+    showDetailPanel(code, name);
+  } else {
+    showDetailPanel(code, name);
+  }
+  updateSelectedVisual();
+}
+
+function expandToPrefecture(provCode){
+  state.expandedProvince = provCode;
+  state.layer = 'prefecture';
+  document.getElementById('statusLayer').textContent = 'PREFECTURE';
+  // Update layer buttons
+  document.querySelectorAll('.layer-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.layer==='prefecture');
+  });
+  // Reset zoom and render prefecture data
+  state.selectedAdcode = null;
+  renderMap();
+  renderList();
+}
+
+// ------ DETAIL PANEL ------
+function showDetailPanel(code, name){
+  var div = state.allDivisions[code]||{};
+  var ld = state.leaderData[code]||{};
+  if(!div.name) div.name = name||code;
+
+  $panelBadge.textContent = div.level?div.level.toUpperCase():'—';
+
+  var html = '';
+  // Name
+  html += '<div class="detail-section"><div class="ds-name">'+div.name+'</div>';
+
+  // Key info
+  html += '<div class="ds-row"><span class="ds-label">Code</span><span class="ds-value">'+code+'</span></div>';
+  html += '<div class="ds-row"><span class="ds-label">Level</span><span class="ds-value">'+getLevelLabel(code)+'</span></div>';
+  if(div.childrenNum!=null) html += '<div class="ds-row"><span class="ds-label">Children</span><span class="ds-value">'+div.childrenNum+'</span></div>';
+  var peers = countPeers(code, div.parent);
+  if(peers>0) html += '<div class="ds-row"><span class="ds-label">Peers</span><span class="ds-value">'+peers+'</span></div>';
+  html += '</div>';
+
+  // Hierarchy tree
+  html += buildHierarchyTree(code);
+
+  // Code analysis
+  html += buildCodeAnalysis(code);
+
+  // Leader info
+  if(Object.keys(ld).length>1){
+    html += '<div class="detail-section"><div class="ds-title">LEADERSHIP</div>';
+    if(ld.sec) html += '<div class="ds-row"><span class="ds-label">Secretary</span><span class="ds-value">'+ld.sec+'</span></div>';
+    if(ld.secDep) html += '<div class="ds-row"><span class="ds-label">Deputy Sec.</span><span class="ds-value">'+ld.secDep+'</span></div>';
+    if(ld.gov) html += '<div class="ds-row"><span class="ds-label">Governor</span><span class="ds-value">'+ld.gov+'</span></div>';
+    if(ld.govDep) html += '<div class="ds-row"><span class="ds-label">Deputy Gov.</span><span class="ds-value">'+ld.govDep+'</span></div>';
+    if(ld.rd) html += '<div class="ds-row"><span class="ds-label">Congress Chair</span><span class="ds-value">'+ld.rd+'</span></div>';
+    if(ld.cppcc) html += '<div class="ds-row"><span class="ds-label">CPPCC Chair</span><span class="ds-value">'+ld.cppcc+'</span></div>';
+    html += '</div>';
+  }
+
+  // Relationship navigation
+  html += '<div class="detail-section"><div class="ds-title">NAVIGATION</div>';
+  if(div.parent && div.parent!=='100000'){
+    var pn = (state.allDivisions[div.parent]||{}).name||div.parent;
+    html += '<div class="ds-row"><span class="ds-label">Parent</span><span class="ds-value clickable" onclick="navigateTo(\''+div.parent+'\',\''+pn+'\')">'+pn+' &rarr;</span></div>';
+  }
+  var provCode = getProvCode(code)+'0000';
+  if(code!==provCode && div.level!=='province'){
+    var prvName = (state.allDivisions[provCode]||{}).name||'';
+    if(prvName){
+      html += '<div class="ds-row"><span class="ds-label">Province</span><span class="ds-value clickable" onclick="navigateTo(\''+provCode+'\',\''+prvName+'\')">'+prvName+' &rarr;</span></div>';
+    }
+  }
+  html += '</div>';
+
+  // Compare action
+  html += '<div style="margin-top:12px"><button class="layer-btn" onclick="addToCompare(\''+code+'\',\''+(div.name||name)+'\')" style="width:100%">+ ADD TO COMPARE</button></div>';
+
+  $dataPanel.innerHTML = html;
+}
+
+function navigateTo(code, name){
+  if(!state.allDivisions[code]) return;
+  state.selectedAdcode = code;
+  var level = state.allDivisions[code].level;
+  if(level==='province'){
+    state.layer = 'province';
+    document.getElementById('statusLayer').textContent = 'PROVINCE';
+    document.querySelectorAll('.layer-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.layer==='province');
+    });
+  }
+  renderMap();
+  showDetailPanel(code, name);
+  renderList();
+}
+
+function countPeers(code, parent){
+  var p = parent||'';
+  var cnt=0;
+  for(var k in state.allDivisions){
+    if(k===code)continue;
+    if(state.allDivisions[k].parent===p)cnt++;
+  }
+  return cnt;
+}
+
+// ------ HIERARCHY TREE ------
+function buildHierarchyTree(code){
+  var div = state.allDivisions[code]||{};
+  var html = '<div class="detail-section"><div class="ds-title">ADMINISTRATIVE HIERARCHY</div><div class="hierarchy">';
+
+  // Build path from code upward
+  var path = [];
+  var cur = code;
+  while(cur && cur!=='100000'){
+    var d = state.allDivisions[cur]||{};
+    path.unshift({code:cur, name:d.name||cur, level:d.level||''});
+    cur = d.parent||'';
+    if(cur===code)break;
+  }
+  // Add China root
+  path.unshift({code:'100000', name:'中华人民共和国', level:'country'});
+
+  for(var i=0;i<path.length;i++){
+    var p = path[i];
+    var isLast = (i===path.length-1);
+    var prefix = '';
+    for(var j=0;j<i;j++) prefix += '&nbsp;&nbsp;&nbsp;';
+    if(i>0) prefix += '&#9492; ';
+    var cls = isLast?'active':(i<path.length-1?'clickable':'');
+    var onclick = (i<path.length-1)?' onclick="navigateTo(\''+p.code+'\',\''+p.name+'\')"':'';
+    html += '<div class="h-node'+(i===0?' root':'')+'"><span class="h-bullet">'+(i===0?'&#9679;':'&#9675;')+'</span><span class="h-name '+cls+'"'+onclick+'>'+p.name+'</span></div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+// ------ CODE ANALYSIS ------
+function buildCodeAnalysis(code){
+  var c = String(code);
+  if(c.length!==6)return'';
+  var p1=c.substring(0,2), p2=c.substring(0,4);
+  var provName=(state.allDivisions[p1+'0000']||{}).name||'';
+  var prefName='';
+  if(p2!==p1+'00'){
+    prefName=(state.allDivisions[p2+'00']||{}).name||(state.allDivisions[p2]||{}).name||'';
+    if(prefName&&prefName===provName) prefName='';
+  }
+
+  var html='<div class="detail-section"><div class="ds-title">CODE ANALYSIS</div><div class="code-blocks">';
+  html+='<div class="code-block"><div class="cb-code">'+c+'</div><div class="cb-name">Full Code</div></div>';
+  html+='<div class="code-block"><div class="cb-code">'+p1+'</div><div class="cb-name">'+provName+'<span class="cb-level">Province</span></div></div>';
+  if(prefName){
+    html+='<div class="code-block"><div class="cb-code">'+p2+'</div><div class="cb-name">'+prefName+'<span class="cb-level">Prefecture</span></div></div>';
+  }
+  html+='<div class="code-block"><div class="cb-code">'+c.substring(4,6)+'</div><div class="cb-name">Division ID<span class="cb-level">Local</span></div></div>';
+  html+='</div></div>';
+  return html;
+}
+
+// ------ RENDER LIST ------
+function renderList(){
+  var list = [];
+  if(state.layer==='province'){
+    list = state.provinceList;
+  } else if(state.layer==='prefecture'){
+    list = state.prefectureList;
+  } else {
+    list = state.countyList.slice(0,500);
+  }
+
+  state.currentList = list;
+
+  var html = '';
+  // Group by parent for prefecture/county
+  if(state.layer==='province'){
+    html += '<div class="list-header">PROVINCES ('+list.length+')</div>';
+    list.forEach(function(item){
+      var active = (item.adcode===state.selectedAdcode);
+      html += '<div class="area-item'+(active?' active':'')+'" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
+    });
+  } else if(state.layer==='prefecture'){
+    // Group by province
+    var groups = {};
+    list.forEach(function(item){
+      var prov = item.parent||'';
+      if(!groups[prov])groups[prov]=[];
+      groups[prov].push(item);
+    });
+    for(var prov in groups){
+      var pname = (state.allDivisions[prov]||{}).name||prov;
+      html += '<div class="list-header">'+pname+' ('+groups[prov].length+')</div>';
+      groups[prov].forEach(function(item){
+        var active = (item.adcode===state.selectedAdcode);
+        html += '<div class="area-item'+(active?' active':'')+'" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
+      });
+    }
+  } else {
+    html += '<div class="list-header">COUNTIES ('+list.length+' shown)</div>';
+    list.forEach(function(item){
+      html += '<div class="area-item" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
+    });
+  }
+  $dataList.innerHTML = html;
+}
+
+// ------ SEARCH ------
+function search(val){
+  var q = (val||'').trim().toLowerCase();
+  var results = [];
+
+  if(!q){
+    renderList();
     return;
   }
-  if(currentMode==='city'){
-    selectedAdcode=ca;
-    var muni={'110000':1,'120000':1,'310000':1,'500000':1};
-    var isCity=(ca.substring(2)!=='00'&&ca.substring(4)==='00');
-    var isMuni=!!muni[ca];
-    if(isCity||isMuni){
-      showDetail(ca,cn,'city');
-      if(expandedCities[ca]){delete expandedCities[ca];renderAll();}else{for(var cc in expandedCities){delete expandedCities[cc];}expandCity(ca).then(function(){renderAll();});}
-      return;
+
+  // Search all divisions
+  for(var k in state.allDivisions){
+    var d = state.allDivisions[k];
+    if(!d||!d.name)continue;
+    if(d.name.toLowerCase().includes(q) || k.includes(q)){
+      results.push(d);
     }
-    showDetail(ca,cn,'city');
-    renderAll();
-    return;
+  }
+
+  // Limit results
+  results = results.slice(0,100);
+
+  var html = '<div class="list-header">SEARCH RESULTS ('+results.length+')</div>';
+  if(results.length===0){
+    html += '<div class="empty-state" style="padding:20px">No results found</div>';
+  } else {
+    results.forEach(function(d){
+      html += '<div class="area-item" data-code="'+d.adcode+'" onclick="navigateTo(\''+d.adcode+'\',\''+d.name+'\')"><span>'+d.name+'</span><span class="ai-code">'+d.adcode+'</span></div>';
+    });
+  }
+  $dataList.innerHTML = html;
+}
+
+// ------ COMPARE MODE ------
+function addToCompare(code, name){
+  if(state.compareSlots.length>=2){
+    state.compareSlots.shift();
+  }
+  state.compareSlots.push({code:code,name:name});
+  if(state.compareSlots.length===2){
+    openCompare();
+  } else {
+    $panelBadge.textContent = 'COMPARE: 1/2 SELECTED';
   }
 }
 
-async function toHome(){
-  await loadApiData();
-  try{
-    var r=await fetch('./china_provinces.json');
-    if(!r.ok)throw Error('');
-    chinaGeo=await r.json();
-    currentZoom=1.0;
-    currentMode='province';
-    document.getElementById('modeProvince').className='toolbar-btn active';
-  }catch(e){
-    try{
-      var r2=await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json');
-      if(!r2.ok)throw Error('');
-      chinaGeo=await r2.json();
-      currentZoom=1.0;
-      currentMode='province';
-      document.getElementById('modeProvince').className='toolbar-btn active';
-      try{renderAll();}catch(e2){}
-      return;
-    }catch(e2){
-      currentMode='city';
-      document.getElementById('modeCity').className='toolbar-btn active';
-      document.getElementById('modeProvince').className='toolbar-btn';
-      cityGeo=null;
-    }
-  }
-  try{renderAll();}catch(e){}
-  updateBreadcrumb('100000','中国','country');
-}
-document.addEventListener('DOMContentLoaded',function(){document.body.classList.add('dark');document.getElementById('darkToggle').textContent='\u2600\uFE0F 亮色';toHome();});
-
-function toggleHistory(){
-  var el=document.getElementById('rightPanelContent');
-  document.getElementById('rightPanelTitle').textContent='更新记录';
-  document.getElementById('rightPanelBadge').textContent='';
-  el.innerHTML='<div class="empty-state">正在加载...</div>';
-  fetch(apiBase+'/api/history').then(function(r){return r.json();}).then(function(json){
-    if(json.code!==0||!json.data||json.data.length===0){el.innerHTML='<div class="empty-state">暂无更新记录</div>';return;}
-    var html='';
-    for(var i=0;i<json.data.length;i++){
-      var h=json.data[i];
-      var typeClass='hi-info';
-      if(h.type.indexOf('success')>=0)typeClass='hi-success';
-      else if(h.type.indexOf('error')>=0||h.type.indexOf('fail')>=0)typeClass='hi-error';
-      else if(h.type.indexOf('start')>=0)typeClass='hi-start';
-      var d=new Date(h.time);
-      var ts=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
-      var typeLabel=h.type.replace('scrape_','').replace('auto_','自动').replace('server_','系统');
-      html+='<div class="history-item"><span class="hi-type '+typeClass+'">'+typeLabel+'</span><span class="hi-time">'+ts+'</span><div class="hi-detail">'+(h.details||'')+'</div>';
-      if(h.source&&h.source.length>0){for(var si=0;si<h.source.length;si++){var src=h.source[si];if(typeof src==='string')html+='<div class="hi-detail" style="font-size:11px">\uD83D\uDCCE '+src+'</div>';else if(src.url)html+='<div class="hi-detail" style="font-size:11px">\uD83D\uDCCE '+src.name+'</div>';}}
-      if(h.results&&h.results.length>0){html+='<div style="margin-top:4px;max-height:100px;overflow-y:auto;font-size:11px">';var maxShow=Math.min(h.results.length,30);for(var ri=0;ri<maxShow;ri++){var r=h.results[ri];html+='<div style="padding:1px 0">\u00B7 '+r.type+' '+r.name+'</div>';}if(h.results.length>maxShow)html+='<div style="color:var(--text-muted)">...还有'+(h.results.length-maxShow)+'条</div>';html+='</div>';}
-      html+='</div>';
-    }
-    el.innerHTML=html;
-  }).catch(function(){el.innerHTML='<div class="empty-state">加载失败</div>';});
+function openCompare(){
+  var a = state.compareSlots[0];
+  var b = state.compareSlots[1];
+  if(!a||!b)return;
+  var html = '';
+  [a,b].forEach(function(slot){
+    var d = state.allDivisions[slot.code]||{};
+    var ld = state.leaderData[slot.code]||{};
+    html += '<div class="compare-col">';
+    html += '<div class="cc-name">'+slot.name+'</div>';
+    html += '<div class="compare-row"><span class="cr-label">Code</span><span class="cr-value">'+slot.code+'</span></div>';
+    html += '<div class="compare-row"><span class="cr-label">Level</span><span class="cr-value">'+getLevelLabel(slot.code)+'</span></div>';
+    if(d.parent) html += '<div class="compare-row"><span class="cr-label">Parent</span><span class="cr-value">'+(state.allDivisions[d.parent]||{}).name||d.parent+'</span></div>';
+    if(ld.sec) html += '<div class="compare-row"><span class="cr-label">Secretary</span><span class="cr-value">'+ld.sec+'</span></div>';
+    if(ld.gov) html += '<div class="compare-row"><span class="cr-label">Governor</span><span class="cr-value">'+ld.gov+'</span></div>';
+    html += '</div>';
+  });
+  $compareBody.innerHTML = html;
+  $compareOverlay.classList.add('active');
 }
 
-function toggleCompare(){
-  compareMode=!compareMode;
-  var btn=document.getElementById('compareToggle');
-  btn.textContent=compareMode?'退出对比':'对比';
-  compareItems=[];
-  if(compareChart){if(Array.isArray(compareChart))compareChart.forEach(function(c){c.dispose();});else compareChart.dispose();compareChart=null;}
-  document.getElementById('rightPanelTitle').textContent='对比模式';
-  document.getElementById('rightPanelBadge').textContent='';
-  document.getElementById('rightPanelContent').innerHTML=compareMode?'<div class="compare-hint">点击两个省份/城市进行对比</div>':'<div class="empty-state">点击地图或列表中的区域查看详情</div>';
+function closeCompare(){
+  $compareOverlay.classList.remove('active');
+  state.compareSlots = [];
+  $panelBadge.textContent = '—';
 }
-function resetCompare(){
-  compareItems=[];if(compareChart){if(Array.isArray(compareChart))compareChart.forEach(function(c){c.dispose();});else compareChart.dispose();compareChart=null;}renderCompare();
+
+// ------ LAYER TOGGLE ------
+function switchLayer(layer){
+  state.layer = layer;
+  state.selectedAdcode = null;
+  state.expandedProvince = null;
+  document.getElementById('statusLayer').textContent = layer.toUpperCase();
+  document.querySelectorAll('.layer-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.layer===layer);
+  });
+  renderMap();
+  renderList();
+  $dataPanel.innerHTML = '<div class="empty-state"><div class="es-icon">&#9678;</div><div>Select a division to view details</div></div>';
+  $panelBadge.textContent = '—';
 }
-function addCompareItem(a,n,t){
-  if(!compareMode)return;var d=gd(a,t);if(!d)d={n:n,p:'--',a:'--',g:'--'};compareItems.push({a:a,n:n,t:t,d:d});if(compareItems.length>2)compareItems.shift();renderCompare();
+
+// ------ EVENTS ------
+function bindEvents(){
+  // Layer buttons
+  document.querySelectorAll('.layer-btn[data-layer]').forEach(function(b){
+    b.addEventListener('click', function(){
+      switchLayer(b.dataset.layer);
+    });
+  });
+
+  // Reset button
+  document.getElementById('btnReset').addEventListener('click', function(){
+    switchLayer('province');
+  });
+
+  // Compare button
+  document.getElementById('btnCompare').addEventListener('click', function(){
+    state.compareSlots = [];
+    $panelBadge.textContent = 'COMPARE: CLICK 2 DIVISIONS';
+  });
+
+  // Search
+  $searchInput.addEventListener('input', function(){
+    search(this.value);
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(e){
+    if(e.key==='/' && document.activeElement!==$searchInput){
+      e.preventDefault();
+      $searchInput.focus();
+    }
+    if(e.key==='Escape'){
+      $searchInput.blur();
+      closeCompare();
+    }
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+      // Navigate peers
+      if(state.selectedAdcode){
+        var peers = [];
+        var sel = state.allDivisions[state.selectedAdcode];
+        if(sel){
+          for(var k in state.allDivisions){
+            if(state.allDivisions[k].parent===sel.parent && k!==state.selectedAdcode){
+              peers.push(k);
+            }
+          }
+          if(peers.length>0){
+            var curIdx = peers.indexOf(state.selectedAdcode);
+            if(e.key==='ArrowRight') curIdx = Math.min(curIdx+1,peers.length-1);
+            else curIdx = Math.max(curIdx-1,0);
+            if(peers[curIdx]){
+              navigateTo(peers[curIdx], state.allDivisions[peers[curIdx]].name);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Resize
+  window.addEventListener('resize', function(){
+    if(state.chart) state.chart.resize();
+  });
 }
-function renderCompare(){
-  var el=document.getElementById('rightPanelContent');
-  if(compareItems.length===0){el.innerHTML='<div class="compare-hint">点击两个省份/城市进行对比</div>';if(compareChart){if(Array.isArray(compareChart))compareChart.forEach(function(c){c.dispose();});else compareChart.dispose();compareChart=null;}return;}
-  if(compareItems.length===1){var d=compareItems[0].d;el.innerHTML='<div style="padding:16px"><div style="text-align:center;font-size:16px;font-weight:600;margin-bottom:16px">'+d.n+'</div><div style="text-align:center"><button class="toolbar-btn" onclick="resetCompare()">重置</button></div><div class="compare-hint">请再点击另一个省份/城市</div></div>';if(compareChart){if(Array.isArray(compareChart))compareChart.forEach(function(c){c.dispose();});else compareChart.dispose();compareChart=null;}return;}
-  var d1=compareItems[0].d,d2=compareItems[1].d;
-  function parseVal(v){if(!v||v==='--')return 0;var s=v.replace(/[万亿km2万,]/g,'');var n=parseFloat(s);if(v.indexOf('万')>-1&&v.indexOf('km2')===-1&&v.indexOf('万亿')===-1)n=n*10000;if(v.indexOf('万亿')>-1)n=n*10000;if(v.indexOf('亿')>-1&&v.indexOf('万亿')===-1)n=n*100000000;return n||0;}
-  el.innerHTML='<div id="comparePop" style="width:100%;height:130px"></div><div id="compareArea" style="width:100%;height:130px"></div><div id="compareGdp" style="width:100%;height:130px"></div><div style="text-align:center;padding:8px"><button class="toolbar-btn" onclick="resetCompare()">重置</button></div>';
-  if(compareChart)compareChart.dispose();
-  compareChart=[];
-  function makeChart(id,title,v1,v2){var c=echarts.init(document.getElementById(id));c.setOption({tooltip:{trigger:'item',formatter:function(p){return p.name+'<br/>'+p.value;}},grid:{left:50,right:10,top:25,bottom:20},xAxis:{type:'category',data:[d1.n,d2.n],axisLabel:{color:'#9E9E9E',fontSize:10}},yAxis:{type:'value',axisLabel:{color:'#9E9E9E',fontSize:9}},title:{text:title,textStyle:{color:'#F5F5F5',fontSize:12},left:'center'},series:[{type:'bar',data:[{value:v1,itemStyle:{color:'#D32F2F'}},{value:v2,itemStyle:{color:'#9E9E9E'}}],barWidth:20}]});compareChart.push(c);}
-  makeChart('comparePop','人口',parseVal(d1.p),parseVal(d2.p));
-  makeChart('compareArea','面积',parseVal(d1.a),parseVal(d2.a));
-  makeChart('compareGdp','GDP',parseVal(d1.g),parseVal(d2.g));
-}
-function searchList(val){
-  var el=document.getElementById('leftPanelContent');
-  if(!val){el.innerHTML=cachedListHtml;return;}
-  var items=el.querySelectorAll('.area-item');
-  var kw=val.trim().toLowerCase();
-  for(var i=0;i<items.length;i++){var txt=items[i].textContent.toLowerCase();items[i].style.display=txt.indexOf(kw)>-1?'':'none';}
-}
-function toggleLabels(){
-  showLabels=!showLabels;
-  var btn=document.getElementById('labelToggle');
-  btn.textContent=showLabels?'地名':'隐藏';
-  if(chart){renderAll();}
-}
-function toggleDark(){
-  var b=document.body;
-  b.classList.toggle('dark');
-  var btn=document.getElementById('darkToggle');
-  btn.textContent=b.classList.contains('dark')?'\u2600\uFE0F 亮色':'\uD83C\uDF19 暗色';
-  if(chart){renderAll();}
-}
+
+// ------ START ------
+document.addEventListener('DOMContentLoaded', init);
+
+// Expose for onclick attributes
+window.navigateTo = navigateTo;
+window.addToCompare = addToCompare;
+window.closeCompare = closeCompare;
+})();
 </script>
 </body>
 </html>
