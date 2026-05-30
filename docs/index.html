@@ -564,6 +564,17 @@ function renderAll(){
     }
     return {name:r.n,adcode:r.a,itemStyle:{borderColor:bc,borderWidth:bw}};
   });
+  // 强制所有展开的子区域显示名称标签（排除被隐藏的父级）
+  for(var i=0;i<data.length;i++){
+    var di=data[i];
+    if(di.adcode&&expandedKeys[di.adcode]){
+      var apv=di.adcode.substring(2)==='0000',act=(!apv&&di.adcode.substring(4)==='00');
+      var isParent=(apv&&expandedProvinces[di.adcode])||(act&&expandedCities[di.adcode]);
+      if(!isParent){
+        di.label={show:true,fontSize:Math.max(8,Math.round(8+currentZoom*0.6)),fontWeight:'bold'};
+      }
+    }
+  }
   try{echarts.registerMap('m',{type:'FeatureCollection',features:feats});}catch(e){}
   // 读取当前用户视角
   var curCenter=null;var curZoom=null;
