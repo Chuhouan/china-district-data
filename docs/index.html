@@ -463,12 +463,27 @@ function buildFeatures(){
 
 function expandProvince(pa){
   if(expandedProvinces[pa])return Promise.resolve(expandedProvinces[pa]);
-  return fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+pa+'_full.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){expandedProvinces[pa]=gd.features||[];return expandedProvinces[pa];}).catch(function(){return null;});
+  if(window._chinaCities)return Promise.resolve(expandProvinceLocal(pa));
+  return fetch('./china_cities.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){window._chinaCities=gd;return expandProvinceLocal(pa);}).catch(function(){return null;});
+}
+function expandProvinceLocal(pa){
+  if(!window._chinaCities)return null;
+  var prefix=pa.substring(0,2);
+  var feats=window._chinaCities.features.filter(function(f){
+    var a=String(f.properties.adcode||f.properties.id||'');
+    return a.substring(0,2)===prefix&&a!==pa&&a.substring(2)!=='0000'&&a.substring(4)==='00';
+  });
+  expandedProvinces[pa]=feats;
+  return feats;
 }
 
 function expandCity(ca){
   if(expandedCities[ca])return Promise.resolve(expandedCities[ca]);
-  return fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+ca+'_full.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){expandedCities[ca]=gd.features||[];return expandedCities[ca];}).catch(function(){return null;});
+  // 尝试阿里云API加载区县级边界
+  return fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+ca+'_full.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){expandedCities[ca]=gd.features||[];return expandedCities[ca];}).catch(function(){
+    // 阿里云不可用时，不再展开区县
+    return null;
+  });
 }
 
 function renderAll(){
@@ -564,13 +579,13 @@ function renderSidebar(){
   document.getElementById('leftPanelTitle').textContent=modeLabels[currentMode]+'列表';
   document.getElementById('leftPanelBadge').textContent=modeLabels[currentMode];
   var ph='<div class="list-title">所有'+(currentMode==='province'?'省份':'城市')+' <span>('+allP.length+')</span></div>';
-  for(var i=0;i<allP.length;i++){var pv=allP[i],dd=D[pv.a]||C[pv.a],sub='';if(dd){var parts=[];if(dd.p)parts.push('人口 '+dd.p);if(dd.a)parts.push('面积 '+dd.a);if(!parts.length&&dd.sec)parts.push('书记 '+dd.sec);if(!parts.length&&dd.gov)parts.push('市长 '+dd.gov);sub=parts.join(' / ');}var ie=!!expandedProvinces[pv.a];var iec=!!expandedCities[pv.a];ph+='<div class="area-item'+(ie||iec?' expanded':'')+'" onclick="handleClick(\''+pv.a+'\',\''+pv.n+'\')" style="'+(ie||iec?'border-color:#4a5070;background:#f0f2f6;':'')+'"><div class="ai-name">'+(ie||iec?'&#9660; ':'&#9654; ')+pv.n+'</div>'+(sub?'<div class="ai-sub">'+sub+'</div>':'')+'</div>';
+  for(var i=0;i<allP.length;i++){var pv=allP[i],ie=!!expandedProvinces[pv.a];var iec=!!expandedCities[pv.a];ph+='<div class="area-item'+(ie||iec?' expanded':'')+'" onclick="handleClick(\''+pv.a+'\',\''+pv.n+'\')" style="'+(ie||iec?'border-color:#4a5070;background:#f0f2f6;':'')+'"><div class="ai-name">'+(ie||iec?'&#9660; ':'&#9654; ')+pv.n+'</div></div>';
     // 如果该省份已展开，列出下辖市
     if(ie&&expandedProvinces[pv.a]){
       var cfs=expandedProvinces[pv.a];
       for(var ci=0;ci<cfs.length;ci++){
         var cf=cfs[ci],ca2=String(cf.properties.adcode||cf.properties.id||''),cn2=cf.properties.name||'';
-        if(cn2&&ca2!==pv.a){var dd2=C[ca2],sub2='';if(dd2)sub2='人口 '+dd2.p+' / 面积 '+dd2.a;ph+='<div class="area-item" style="padding:8px 14px 8px 28px;border-color:transparent;margin-bottom:2px" onclick="handleClick(\''+ca2+'\',\''+cn2+'\')"><div class="ai-name" style="font-size:13px">'+cn2+'</div>'+(sub2?'<div class="ai-sub" style="font-size:11px">'+sub2+'</div>':'')+'</div>';}
+        if(cn2&&ca2!==pv.a){ph+='<div class="area-item" style="padding:8px 14px 8px 28px;border-color:transparent;margin-bottom:2px" onclick="handleClick(\''+ca2+'\',\''+cn2+'\')"><div class="ai-name" style="font-size:13px">'+cn2+'</div></div>';}
       }
     }
     // 如果该城市已展开，列出下辖区县
