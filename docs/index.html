@@ -673,13 +673,22 @@ function showDetail(a,n,t){
   document.getElementById('rightPanelBadge').textContent=tl;
   var el=document.getElementById('rightPanelContent');
   if(!d){
+    var pa=a.substring(0,2)+'0000';
+    var pc=D[pa]?D[pa].n:'';
     el.innerHTML='<div class="detail-section">'+
-      '<div class="detail-header"><div class="detail-name">'+n+'</div></div>'+
+      '<div class="detail-header"><div class="detail-name">'+n+'</div>'+
+      (pc?'<div class="detail-parent">'+pc+'</div>':'')+
+      '</div>'+
       '<hr class="detail-divider">'+
       '<div class="detail-field"><span class="df-label">编码</span><span class="df-value" style="font-family:var(--font-mono)">'+a+'</span></div>'+
       '<div class="detail-field"><span class="df-label">级别</span><span class="df-value">'+levelLabel+'</span></div>'+
+      (pc?'<div class="detail-field"><span class="df-label">上级</span><span class="df-value">'+pc+'</span></div>':'')+
       '<hr class="detail-divider">'+
-      '<div class="detail-path"><span class="bc-path">中国</span><span class="dp-arrow">\u2192</span><span>'+n+'</span></div>'+
+      '<div style="padding:12px 0;color:var(--text-muted);font-size:12px">该行政区领导数据尚未采集</div>'+
+      '<hr class="detail-divider">'+
+      '<div class="detail-path"><span class="bc-path">中国</span>'+
+      (pc?'<span class="dp-arrow">\u2192</span><span>'+pc+'</span>':'')+
+      '<span class="dp-arrow">\u2192</span><span>'+n+'</span></div>'+
       '</div>'+
       '<div class="detail-footer"><div class="detail-footer-text">China Administrative Division Database</div></div>';
     updateBreadcrumb(a,n,t);
