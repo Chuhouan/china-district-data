@@ -706,6 +706,15 @@ function showDetail(a,n,t){
   if(d.g)h+='<div class="detail-field"><span class="df-label">GDP</span><span class="df-value">'+d.g+'</span></div>';
   if(d.cp)h+='<div class="detail-field"><span class="df-label">区划</span><span class="df-value">'+d.cp+'</span></div>';
   if(d.seat)h+='<div class="detail-field"><span class="df-label">驻地</span><span class="df-value">'+d.seat+'</span></div>';
+  if(d.sec||d.gov||d.rd||d.cppcc){
+    h+='<hr class="detail-divider">';
+    if(d.sec)h+='<div class="detail-field"><span class="df-label">书记</span><span class="df-value">'+d.sec+'</span></div>';
+    if(d.secDep)h+='<div class="detail-field"><span class="df-label">副书记</span><span class="df-value">'+d.secDep+'</span></div>';
+    if(d.gov)h+='<div class="detail-field"><span class="df-label">首长</span><span class="df-value">'+d.gov+'</span></div>';
+    if(d.govDep)h+='<div class="detail-field" style="flex-wrap:wrap"><span class="df-label">副职</span><span class="df-value" style="max-width:65%;text-align:right;word-break:break-all">'+d.govDep+'</span></div>';
+    if(d.rd)h+='<div class="detail-field"><span class="df-label">人大主任</span><span class="df-value">'+d.rd+'</span></div>';
+    if(d.cppcc)h+='<div class="detail-field"><span class="df-label">政协主席</span><span class="df-value">'+d.cppcc+'</span></div>';
+  }
   h+='<hr class="detail-divider">'+
     '<div class="detail-path">';
   h+='<span class="bc-path">中国</span>';
