@@ -479,11 +479,18 @@ function expandProvinceLocal(pa){
 
 function expandCity(ca){
   if(expandedCities[ca])return Promise.resolve(expandedCities[ca]);
-  // 尝试阿里云API加载区县级边界
+  // 先尝试阿里云API（单个城市可能可以使用）
   return fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+ca+'_full.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){expandedCities[ca]=gd.features||[];return expandedCities[ca];}).catch(function(){
-    // 阿里云不可用时，不再展开区县
-    return null;
+    // 阿里云不可用，改用本地china_counties.json
+    if(window._chinaCounties)return Promise.resolve(expandCityLocal(ca));
+    return fetch('./china_counties.json').then(function(r2){if(!r2.ok)throw Error('');return r2.json();}).then(function(gd2){window._chinaCounties=gd2;return expandCityLocal(ca);}).catch(function(){return null;});
   });
+}
+function expandCityLocal(ca){
+  if(!window._chinaCounties)return null;
+  var feats=window._chinaCounties.features.filter(function(f){return f._c===ca;});
+  if(feats.length>0)expandedCities[ca]=feats;
+  return feats.length>0?feats:null;
 }
 
 function renderAll(){
