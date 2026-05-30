@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>中国行政区划数据库 | China Administrative Division Database</title>
+<title>中国行政区划数据库</title>
 <style>
 :root{
   --bg:#111;--panel:#171717;--border:#303030;--border-light:#252525;
@@ -23,7 +23,11 @@ body{-webkit-font-smoothing:antialiased}
 .status-bar .sb-label{color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
 .status-bar .sb-value{color:var(--text);font-family:var(--font-mono);font-weight:600}
 .status-bar .sb-sep{color:var(--border);margin:0 2px}
-.status-bar .sb-right{margin-left:auto;color:var(--text2);font-size:10px}
+.status-bar .sb-right{margin-left:auto;display:flex;align-items:center;gap:16px}
+.status-bar .sb-right .sb-tag{font-size:10px;color:var(--text2)}
+.lang-btn{background:var(--border-light);border:1px solid var(--border);color:var(--text2);font-size:10px;padding:2px 8px;cursor:pointer;border-radius:2px;font-family:var(--font-sans);transition:all .15s}
+.lang-btn:hover{color:var(--text);border-color:var(--text3)}
+.lang-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* ====== STATS ====== */
 .stats-bar{height:var(--stats-h);display:flex;align-items:center;justify-content:center;gap:0;border-bottom:1px solid var(--border)}
@@ -84,8 +88,8 @@ body{-webkit-font-smoothing:antialiased}
 .ds-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border-light)}
 .ds-name{font-size:18px;font-weight:700;margin-bottom:8px;line-height:1.2}
 .ds-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
-.ds-row .ds-label{color:var(--text3);min-width:80px}
-.ds-row .ds-value{color:var(--text);text-align:right;font-family:var(--font-mono)}
+.ds-row .ds-label{color:var(--text3);min-width:90px}
+.ds-row .ds-value{color:var(--text);text-align:right;font-family:var(--font-mono);flex:1;word-break:break-all}
 .ds-value.clickable{color:var(--text2);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .ds-value.clickable:hover{color:var(--accent)}
 
@@ -141,31 +145,35 @@ body{-webkit-font-smoothing:antialiased}
 
 <!-- STATUS BAR -->
 <div class="status-bar">
-  <div class="sb-item"><span class="sb-label">DATASET</span><span class="sb-value" id="statusVersion">v1.0</span></div>
-  <div class="sb-item"><span class="sb-label">UPDATED</span><span class="sb-value" id="statusUpdated">—</span></div>
-  <div class="sb-item"><span class="sb-label">COVERAGE</span><span class="sb-value" id="statusCoverage">—</span></div>
-  <div class="sb-item"><span class="sb-label">RECORDS</span><span class="sb-value" id="statusRecords">—</span></div>
-  <div class="sb-item"><span class="sb-label">LAYER</span><span class="sb-value" id="statusLayer">—</span></div>
-  <div class="sb-right">CHINA ADMINISTRATIVE DIVISION DATABASE TERMINAL</div>
+  <div class="sb-item"><span class="sb-label" id="lblDataset">DATASET</span><span class="sb-value" id="statusVersion">v1.0</span></div>
+  <div class="sb-item"><span class="sb-label" id="lblUpdated">UPDATED</span><span class="sb-value" id="statusUpdated">—</span></div>
+  <div class="sb-item"><span class="sb-label" id="lblCoverage">COVERAGE</span><span class="sb-value" id="statusCoverage">—</span></div>
+  <div class="sb-item"><span class="sb-label" id="lblRecords">RECORDS</span><span class="sb-value" id="statusRecords">—</span></div>
+  <div class="sb-item"><span class="sb-label" id="lblLayer">LAYER</span><span class="sb-value" id="statusLayer">—</span></div>
+  <div class="sb-right">
+    <span class="sb-tag" id="statusTag">CHINA ADMINISTRATIVE DIVISION DATABASE TERMINAL</span>
+    <button class="lang-btn" id="btnZh" onclick="setLang('zh')">中</button>
+    <button class="lang-btn active" id="btnEn" onclick="setLang('en')">EN</button>
+  </div>
 </div>
 
 <!-- STATS -->
 <div class="stats-bar" id="statsBar">
-  <div class="stat-card"><div class="stat-value" id="statProv">34</div><div class="stat-label">Provinces</div></div>
-  <div class="stat-card"><div class="stat-value" id="statPref">333</div><div class="stat-label">Prefectures</div></div>
-  <div class="stat-card"><div class="stat-value" id="statCnty">2800+</div><div class="stat-label">Counties</div></div>
-  <div class="stat-card"><div class="stat-value" id="statTotal">3197</div><div class="stat-label">Total Divisions</div></div>
+  <div class="stat-card"><div class="stat-value" id="statProv">34</div><div class="stat-label" id="lblStatProv">PROVINCES</div></div>
+  <div class="stat-card"><div class="stat-value" id="statPref">333</div><div class="stat-label" id="lblStatPref">PREFECTURES</div></div>
+  <div class="stat-card"><div class="stat-value" id="statCnty">2800+</div><div class="stat-label" id="lblStatCnty">COUNTIES</div></div>
+  <div class="stat-card"><div class="stat-value" id="statTotal">3197</div><div class="stat-label" id="lblStatTotal">TOTAL</div></div>
 </div>
 
 <!-- LAYER TOGGLE -->
 <div class="layer-bar">
-  <button class="layer-btn active" data-layer="province">PROVINCE</button>
-  <button class="layer-btn" data-layer="prefecture">PREFECTURE</button>
-  <button class="layer-btn" data-layer="county">COUNTY</button>
+  <button class="layer-btn active" data-layer="province" id="btnProv">PROVINCE</button>
+  <button class="layer-btn" data-layer="prefecture" id="btnPref">PREFECTURE</button>
+  <button class="layer-btn" data-layer="county" id="btnCounty">COUNTY</button>
   <span class="layer-sep"></span>
   <button class="layer-btn" id="btnCompare">COMPARE</button>
-  <button class="layer-btn" id="btnReset">RESET VIEW</button>
-  <span class="layer-hint">Press <kbd>/</kbd> to search</span>
+  <button class="layer-btn" id="btnReset">RESET</button>
+  <span class="layer-hint" id="hintShortcut">Press <kbd>/</kbd> to search</span>
 </div>
 
 <!-- MAIN CONTENT -->
@@ -189,9 +197,9 @@ body{-webkit-font-smoothing:antialiased}
 
   <!-- RIGHT: Data Panel -->
   <div class="right-panel">
-    <div class="panel-header"><span>DATA VIEW</span><span id="panelBadge" style="color:var(--accent)">—</span></div>
+    <div class="panel-header"><span id="lblPanelHeader">DATA VIEW</span><span id="panelBadge" style="color:var(--accent)">—</span></div>
     <div class="panel-body" id="dataPanel">
-      <div class="empty-state">
+      <div class="empty-state" id="panelEmpty">
         <div class="es-icon">&#9678;</div>
         <div>Select a division on the map<br>or search to begin exploration.</div>
         <div style="margin-top:8px;font-size:10px">Click the map to enter data browsing mode</div>
@@ -204,7 +212,7 @@ body{-webkit-font-smoothing:antialiased}
 <div class="compare-overlay" id="compareOverlay">
   <div class="compare-panel">
     <div class="compare-header">
-      <span class="ch-title">COMPARE MODE</span>
+      <span class="ch-title" id="lblCompareTitle">COMPARE MODE</span>
       <button class="compare-close" onclick="closeCompare()">&times;</button>
     </div>
     <div class="compare-body" id="compareBody"></div>
@@ -224,18 +232,82 @@ body{-webkit-font-smoothing:antialiased}
 (function(){
 'use strict';
 
+// ------ TRANSLATIONS ------
+var LANG = 'en';
+var T = {
+  en: {
+    level_country:'Country', level_province:'Province', level_prefecture:'Prefecture', level_county:'County',
+    dataset:'DATASET', updated:'UPDATED', coverage:'COVERAGE', records:'RECORDS', layer:'LAYER',
+    stat_provinces:'PROVINCES', stat_prefectures:'PREFECTURES', stat_counties:'COUNTIES', stat_total:'TOTAL DIVISIONS',
+    btn_province:'PROVINCE', btn_prefecture:'PREFECTURE', btn_county:'COUNTY',
+    btn_compare:'COMPARE', btn_reset:'RESET VIEW',
+    panel_header:'DATA VIEW',
+    search_placeholder:'Search by name or code...',
+    search_results:'SEARCH RESULTS',
+    loading:'Loading...',
+    compare_title:'COMPARE MODE',
+    compare_1of2:'COMPARE: 1/2 SELECTED — click another division',
+    compare_empty:'Click COMPARE, then select 2 divisions',
+    shortcut_hint:'Press <kbd>/</kbd> to search &nbsp; <kbd>Esc</kbd> Close &nbsp; <kbd>&larr;</kbd><kbd>&rarr;</kbd> Navigate',
+    empty_title:'Select a division on the map',
+    empty_sub:'or search to begin exploration.',
+    empty_hint:'Click the map to enter data browsing mode',
+    tt_code:'Code', tt_level:'Level', tt_province:'Province', tt_parent:'Parent',
+    ds_info:'OVERVIEW', ds_hierarchy:'HIERARCHY', ds_code:'CODE ANALYSIS', ds_leadership:'LEADERSHIP', ds_nav:'NAVIGATION',
+    lbl_code:'Code', lbl_level:'Level', lbl_children:'Children', lbl_peers:'Peers',
+    lbl_fullcode:'Full Code', lbl_province_id:'Province', lbl_pref_id:'Prefecture', lbl_local_id:'Division ID (Local)',
+    lbl_parent:'Parent', lbl_province:'Province',
+    lbl_sec:'Secretary', lbl_secdep:'Deputy Sec.', lbl_gov:'Governor', lbl_govdep:'Deputy Gov.', lbl_rd:'Congress Chair', lbl_cppcc:'CPPCC Chair',
+    lbl_add_compare:'+ ADD TO COMPARE',
+    province_list:'PROVINCES', pref_list:'PREFECTURES', county_list:'COUNTIES',
+    status_tag:'CHINA ADMINISTRATIVE DIVISION DATABASE TERMINAL',
+    no_results:'No results found',
+    shown:'shown'
+  },
+  zh: {
+    level_country:'国家', level_province:'省级', level_prefecture:'地级', level_county:'县级',
+    dataset:'数据库', updated:'更新日期', coverage:'覆盖率', records:'记录数', layer:'图层',
+    stat_provinces:'省级行政区', stat_prefectures:'地级行政区', stat_counties:'县级行政区', stat_total:'总计区划',
+    btn_province:'省级', btn_prefecture:'地级', btn_county:'县级',
+    btn_compare:'对比', btn_reset:'重置视图',
+    panel_header:'数据面板',
+    search_placeholder:'搜索名称或代码...',
+    search_results:'搜索结果',
+    loading:'加载中...',
+    compare_title:'对比模式',
+    compare_1of2:'对比：已选 1/2 — 点击另一行政区',
+    compare_empty:'点击"对比"，然后选择两个行政区',
+    shortcut_hint:'<kbd>/</kbd> 搜索 &nbsp; <kbd>Esc</kbd> 关闭 &nbsp; <kbd>&larr;</kbd><kbd>&rarr;</kbd> 导航',
+    empty_title:'在地图上选择一个行政区',
+    empty_sub:'或使用搜索开始浏览。',
+    empty_hint:'点击地图进入数据浏览模式',
+    tt_code:'代码', tt_level:'层级', tt_province:'省份', tt_parent:'上级',
+    ds_info:'概览', ds_hierarchy:'行政层级', ds_code:'代码解析', ds_leadership:'领导信息', ds_nav:'导航',
+    lbl_code:'代码', lbl_level:'层级', lbl_children:'下辖', lbl_peers:'同级',
+    lbl_fullcode:'完整代码', lbl_province_id:'省级标识', lbl_pref_id:'地级标识', lbl_local_id:'本地编号',
+    lbl_parent:'上级', lbl_province:'所属省份',
+    lbl_sec:'书记', lbl_secdep:'副书记', lbl_gov:'首长', lbl_govdep:'副职', lbl_rd:'人大主任', lbl_cppcc:'政协主席',
+    lbl_add_compare:'+ 加入对比',
+    province_list:'省级列表', pref_list:'地级列表', county_list:'县级列表',
+    status_tag:'中国行政区划数据库终端',
+    no_results:'无结果',
+    shown:'显示'
+  }
+};
+function t(key){ return (T[LANG]||T['en'])[key]||key; }
+
 // ------ STATE ------
 var state = {
-  layer: 'province',       // province | prefecture | county
-  geoData: {},             // { province: geojson, prefecture: geojson, county: geojson }
-  allDivisions: {},        // { adcode: { adcode, name, level, parent, ... } }
-  provinceList: [],        // [{adcode, name}]
-  prefectureList: [],      // [{adcode, name, parent}]
-  countyList: [],          // [{adcode, name, parent}]
-  leaderData: {},          // from scraped_data.json
+  layer: 'province',
+  geoData: {},
+  allDivisions: {},
+  provinceList: [],
+  prefectureList: [],
+  countyList: [],
+  leaderData: {},
   selectedAdcode: null,
   expandedProvince: null,
-  currentList: [],         // current displayed list
+  currentList: [],
   compareSlots: [],
   chart: null,
   stats: { prov:34, pref:0, cnty:0, total:0 }
@@ -251,12 +323,55 @@ var $compareOverlay = document.getElementById('compareOverlay');
 var $compareBody = document.getElementById('compareBody');
 var $panelBadge = document.getElementById('panelBadge');
 
+// ------ LANG TOGGLE ------
+window.setLang = function(lang){
+  LANG = lang;
+  document.getElementById('btnZh').classList.toggle('active', lang==='zh');
+  document.getElementById('btnEn').classList.toggle('active', lang==='en');
+  updateAllLabels();
+  if(state.selectedAdcode){
+    var d = state.allDivisions[state.selectedAdcode]||{};
+    showDetailPanel(state.selectedAdcode, d.name||'');
+  }
+  renderList();
+};
+
+function updateAllLabels(){
+  document.getElementById('lblDataset').textContent = t('dataset');
+  document.getElementById('lblUpdated').textContent = t('updated');
+  document.getElementById('lblCoverage').textContent = t('coverage');
+  document.getElementById('lblRecords').textContent = t('records');
+  document.getElementById('lblLayer').textContent = t('layer');
+  document.getElementById('lblStatProv').textContent = t('stat_provinces');
+  document.getElementById('lblStatPref').textContent = t('stat_prefectures');
+  document.getElementById('lblStatCnty').textContent = t('stat_counties');
+  document.getElementById('lblStatTotal').textContent = t('stat_total');
+  document.getElementById('btnProv').textContent = t('btn_province');
+  document.getElementById('btnPref').textContent = t('btn_prefecture');
+  document.getElementById('btnCounty').textContent = t('btn_county');
+  document.getElementById('btnCompare').textContent = t('btn_compare');
+  document.getElementById('btnReset').textContent = t('btn_reset');
+  document.getElementById('lblPanelHeader').textContent = t('panel_header');
+  document.getElementById('lblCompareTitle').textContent = t('compare_title');
+  document.getElementById('statusTag').textContent = t('status_tag');
+  document.getElementById('shortcutHint').innerHTML = t('shortcut_hint');
+  $searchInput.placeholder = t('search_placeholder');
+  document.getElementById('statusLayer').textContent = t('layer') + ':' + state.layer.toUpperCase();
+  updateEmptyState();
+}
+
+function updateEmptyState(){
+  var el = document.getElementById('panelEmpty');
+  if(el){
+    el.innerHTML = '<div class="es-icon">&#9678;</div><div>'+t('empty_title')+'</div><div>'+t('empty_sub')+'</div><div style="margin-top:8px;font-size:10px">'+t('empty_hint')+'</div>';
+  }
+}
+
 // ------ HELPERS ------
 function pad2(n){ return String(n).padStart(2,'0'); }
 function adcodeProv(c){ return String(c).substring(0,2)+'0000'; }
 function adcodePref(c){ return String(c).substring(0,4)+'00'; }
 function getProvCode(c){ return String(c).substring(0,2); }
-function getPrefCode(c){ return String(c).substring(0,4); }
 
 // ------ INIT ------
 function init(){
@@ -287,627 +402,356 @@ function loadAllGeoJSON(){
 
 function buildDivisionIndex(){
   var idx = state.allDivisions;
-  var pl = [], pfl = [], ctl = [];
+  var pl=[],pfl=[],ctl=[];
 
-  // Provinces
   (state.geoData.province.features||[]).forEach(function(f){
-    var p = f.properties||{};
-    var c = String(p.adcode||'');
-    var n = p.name||'';
+    var p=f.properties||{},c=String(p.adcode||''),n=p.name||'';
     if(!c||!n)return;
-    idx[c] = { adcode:c, name:n, level:'province', parent:'100000', childrenNum:p.childrenNum||0 };
-    pl.push({adcode:c, name:n});
+    idx[c]={adcode:c,name:n,level:'province',parent:'100000',childrenNum:p.childrenNum||0};
+    pl.push({adcode:c,name:n});
   });
 
-  // Prefectures (city level from the prefecture file)
   (state.geoData.prefAll.features||[]).forEach(function(f){
-    var p = f.properties||{};
-    var c = String(p.adcode||'');
-    var n = p.name||'';
+    var p=f.properties||{},c=String(p.adcode||''),n=p.name||'';
     if(!c||!n)return;
-    var lv = p.level||'';
+    var lv=p.level||'';
     if(lv==='city'){
-      var parentC = p.parent?String(p.parent.adcode):adcodeProv(c);
-      idx[c] = { adcode:c, name:n, level:'prefecture', parent:parentC, childrenNum:p.childrenNum||0 };
-      pfl.push({adcode:c, name:n, parent:parentC});
+      var parentC=p.parent?String(p.parent.adcode):adcodeProv(c);
+      idx[c]={adcode:c,name:n,level:'prefecture',parent:parentC,childrenNum:p.childrenNum||0};
+      pfl.push({adcode:c,name:n,parent:parentC});
     }
   });
 
-  // Counties (from china_counties.json)
   if(state.geoData.county&&state.geoData.county.features){
     state.geoData.county.features.forEach(function(f){
-      var p = f.properties||{};
-      var c = String(p.adcode||'');
-      var n = p.name||'';
+      var p=f.properties||{},c=String(p.adcode||''),n=p.name||'';
       if(!c||!n)return;
-      var parentC = f._c||adcodePref(c);
-      idx[c] = { adcode:c, name:n, level:'county', parent:parentC };
-      ctl.push({adcode:c, name:n, parent:parentC});
+      var parentC=f._c||adcodePref(c);
+      idx[c]={adcode:c,name:n,level:'county',parent:parentC};
+      ctl.push({adcode:c,name:n,parent:parentC});
     });
   }
 
-  state.provinceList = pl;
-  state.prefectureList = pfl;
-  state.countyList = ctl;
-  state.stats.prov = pl.length;
-  state.stats.pref = pfl.length;
-  state.stats.cnty = ctl.length;
-  state.stats.total = pl.length + pfl.length + ctl.length;
+  state.provinceList=pl; state.prefectureList=pfl; state.countyList=ctl;
+  state.stats.prov=pl.length; state.stats.pref=pfl.length; state.stats.cnty=ctl.length;
+  state.stats.total=pl.length+pfl.length+ctl.length;
 }
 
 // ------ LOAD LEADER DATA ------
 function loadLeaderData(){
   fetch('./scraped_data.json?v=3').then(r=>r.json()).then(function(d){
-    state.leaderData = {};
-    if(d&&d.cities){
-      for(var k in d.cities){
-        state.leaderData[k] = d.cities[k];
-      }
-    }
-    if(d&&d.provinces){
-      for(var k in d.provinces){
-        state.leaderData[k] = d.provinces[k];
-      }
-    }
-    if(d&&d.lastUpdate){
-      document.getElementById('statusUpdated').textContent =
-        new Date(d.lastUpdate).toISOString().substring(0,10);
-    }
+    state.leaderData={};
+    if(d&&d.cities) for(var k in d.cities) state.leaderData[k]=d.cities[k];
+    if(d&&d.provinces) for(var k in d.provinces) state.leaderData[k]=d.provinces[k];
+    if(d&&d.lastUpdate) document.getElementById('statusUpdated').textContent=new Date(d.lastUpdate).toISOString().substring(0,10);
   }).catch(function(){});
 }
 
-// ------ COMPUTE STATS ------
 function computeStats(){
-  document.getElementById('statProv').textContent = state.stats.prov;
-  document.getElementById('statPref').textContent = state.stats.pref;
-  document.getElementById('statCnty').textContent = state.stats.cnty;
-  document.getElementById('statTotal').textContent = state.stats.total;
+  document.getElementById('statProv').textContent=state.stats.prov;
+  document.getElementById('statPref').textContent=state.stats.pref;
+  document.getElementById('statCnty').textContent=state.stats.cnty;
+  document.getElementById('statTotal').textContent=state.stats.total;
 }
-
-function updateStatsBar(){
-  document.getElementById('statProv').textContent = state.stats.prov;
-  document.getElementById('statPref').textContent = state.stats.pref;
-  document.getElementById('statCnty').textContent = state.stats.cnty;
-  document.getElementById('statTotal').textContent = state.stats.total;
-}
-
+function updateStatsBar(){ computeStats(); }
 function updateStatusBar(){
-  document.getElementById('statusVersion').textContent = 'v1.0';
-  document.getElementById('statusCoverage').textContent = '100%';
-  document.getElementById('statusRecords').textContent = state.stats.total;
-  document.getElementById('statusLayer').textContent = state.layer.toUpperCase();
+  document.getElementById('statusVersion').textContent='v2.0';
+  document.getElementById('statusCoverage').textContent='100%';
+  document.getElementById('statusRecords').textContent=state.stats.total;
+  document.getElementById('statusLayer').textContent=t('layer')+':'+state.layer.toUpperCase();
 }
 
 // ------ INIT MAP ------
 function initMap(){
-  state.chart = echarts.init($mapCanvas);
-  registerChinaMap().then(function(){
-    renderMap();
-  });
-}
-
-function registerChinaMap(){
-  return new Promise(function(resolve){
-    echarts.registerMap('china', state.geoData.province);
-    resolve();
-  });
+  state.chart=echarts.init($mapCanvas);
+  echarts.registerMap('china',state.geoData.province);
+  renderMap();
 }
 
 function getDisplayGeo(){
-  if(state.layer==='province'){
-    return state.geoData.province;
-  } else if(state.layer==='prefecture'){
-    return buildPrefectureGeo();
-  } else {
-    return buildCountyGeo();
-  }
+  if(state.layer==='province') return state.geoData.province;
+  if(state.layer==='prefecture') return buildPrefectureGeo();
+  return buildCountyGeo();
 }
-
 function buildPrefectureGeo(){
-  var features = [];
-  (state.geoData.prefAll.features||[]).forEach(function(f){
-    var p = f.properties||{};
-    if(p.level==='city'){
-      features.push(f);
-    }
-  });
-  return { type:'FeatureCollection', features:features };
+  var feats=[];(state.geoData.prefAll.features||[]).forEach(function(f){var p=f.properties||{};if(p.level==='city')feats.push(f);});
+  return {type:'FeatureCollection',features:feats};
 }
-
 function buildCountyGeo(){
-  if(!state.geoData.county||!state.geoData.county.features){
-    return buildPrefectureGeo();
-  }
+  if(!state.geoData.county||!state.geoData.county.features)return buildPrefectureGeo();
   return state.geoData.county;
 }
 
 function renderMap(){
-  var geo = getDisplayGeo();
-  var mapName = 'm_'+state.layer;
-  echarts.registerMap(mapName, geo);
+  var geo=getDisplayGeo(),mapName='m_'+state.layer;
+  echarts.registerMap(mapName,geo);
 
-  var data = geo.features.map(function(f){
-    var p = f.properties||{};
-    var c = String(p.adcode||'');
-    var sel = (c===state.selectedAdcode);
-    var exp = (state.expandedProvince && c===state.expandedProvince);
-    return {
-      name: p.name||'',
-      value: sel?2:(exp?1:0),
-      adcode: c,
-      level: p.level||state.layer
-    };
+  var data=geo.features.map(function(f){
+    var p=f.properties||{},c=String(p.adcode||''),sel=(c===state.selectedAdcode);
+    return {name:p.name||'',value:sel?2:0,adcode:c,level:p.level||state.layer};
   });
 
-  var opt = {
-    tooltip: { show: false },
-    series: [{
-      type: 'map', map: mapName, roam: true, zoom: 1.2,
-      center: [104.5,37.5],
-      aspectScale: .75, selectedMode: false,
-      itemStyle: { areaColor:'#1A1A1A', borderColor:'#404040', borderWidth:.5 },
-      emphasis: {
-        itemStyle: { areaColor: 'rgba(211,47,47,0.25)', borderColor: '#D32F2F', borderWidth: 2 },
-        label: { show: true, color: '#F5F5F5', fontSize: 11 }
-      },
-      label: {
-        show: state.layer==='province',
-        color: '#606060', fontSize: state.layer==='province'?11:8, fontFamily: 'var(--font-sans)'
-      },
-      data: data,
-      selectedMode: false
+  state.chart.setOption({
+    tooltip:{show:false},
+    series:[{
+      type:'map',map:mapName,roam:true,zoom:1.2,center:[104.5,37.5],aspectScale:.75,selectedMode:false,
+      itemStyle:{areaColor:'#1A1A1A',borderColor:'#404040',borderWidth:.5},
+      emphasis:{itemStyle:{areaColor:'rgba(211,47,47,0.25)',borderColor:'#D32F2F',borderWidth:2},label:{show:true,color:'#F5F5F5',fontSize:11}},
+      label:{show:state.layer==='province',color:'#606060',fontSize:state.layer==='province'?11:8},
+      data:data,selectedMode:false
     }],
-    visualMap: { show: false, min:0, max:2, inRange: { color: ['#1A1A1A','#2a1a1a','#3a1515'] } }
-  };
+    visualMap:{show:false,min:0,max:2,inRange:{color:['#1A1A1A','#3a1515']}}
+  },true);
 
-  state.chart.setOption(opt, true);
-
-  // Click handler
-  state.chart.off('click');
-  state.chart.on('click', function(params){
-    if(params.data&&params.data.adcode){
-      handleMapClick(params.data.adcode, params.name);
-    }
-  });
-
-  // Hover handler
-  state.chart.off('mouseover');
-  state.chart.off('mouseout');
-  state.chart.on('mouseover', function(params){
-    if(params.data&&params.data.adcode){
-      showTooltip(params.event.event, params.data.adcode, params.name);
-    }
-  });
-  state.chart.on('mouseout', function(){
-    $tooltip.style.display = 'none';
-  });
-
-  // Update selected visual
+  state.chart.off('click');state.chart.off('mouseover');state.chart.off('mouseout');
+  state.chart.on('click',function(p){if(p.data&&p.data.adcode)handleMapClick(p.data.adcode,p.name);});
+  state.chart.on('mouseover',function(p){if(p.data&&p.data.adcode)showTooltip(p.event.event,p.data.adcode,p.name);});
+  state.chart.on('mouseout',function(){$tooltip.style.display='none';});
   updateSelectedVisual();
 }
 
 function updateSelectedVisual(){
-  var chart = state.chart;
-  var opt = chart.getOption();
-  var series = opt.series[0];
-  if(!series||!series.data)return;
-  series.data = series.data.map(function(d){
-    d.itemStyle = (String(d.adcode)===String(state.selectedAdcode))
-      ? { areaColor:'rgba(211,47,47,0.18)', borderColor:'#D32F2F', borderWidth:2.5 }
-      : { areaColor:'#1A1A1A', borderColor:'#404040', borderWidth:.5 };
-    d.label = (String(d.adcode)===String(state.selectedAdcode))
-      ? { show:true, color:'#D32F2F', fontSize:12, fontWeight:'bold' }
-      : (state.layer==='province'?{show:true}:{show:false});
+  var opt=state.chart.getOption(),series=opt.series[0];if(!series||!series.data)return;
+  series.data=series.data.map(function(d){
+    var sel=String(d.adcode)===String(state.selectedAdcode);
+    d.itemStyle=sel?{areaColor:'rgba(211,47,47,0.18)',borderColor:'#D32F2F',borderWidth:2.5}:{areaColor:'#1A1A1A',borderColor:'#404040',borderWidth:.5};
+    d.label=sel?{show:true,color:'#D32F2F',fontSize:12,fontWeight:'bold'}:(state.layer==='province'?{show:true}:{show:false});
     return d;
   });
-  chart.setOption(opt);
+  state.chart.setOption(opt);
 }
 
 // ------ TOOLTIP ------
-function showTooltip(e, code, name){
+function showTooltip(e,code,name){
   if(!e)return;
-  var div = state.allDivisions[code]||{};
-  var provCode = getProvCode(code)+'0000';
-  var provName = (state.allDivisions[provCode]||{}).name||'';
-  var html = '<div class="tt-name">'+name+'</div>';
-  html += '<div class="tt-row"><span class="tt-label">Code</span><span class="tt-value">'+code+'</span></div>';
-  html += '<div class="tt-row"><span class="tt-label">Level</span><span class="tt-value">'+getLevelLabel(code)+'</span></div>';
-  if(provName && code!==provCode){
-    html += '<div class="tt-row"><span class="tt-label">Province</span><span class="tt-value">'+provName+'</span></div>';
-  }
+  var div=state.allDivisions[code]||{};
+  var provCode=getProvCode(code)+'0000',provName=(state.allDivisions[provCode]||{}).name||'';
+  var html='<div class="tt-name">'+name+'</div>';
+  html+='<div class="tt-row"><span class="tt-label">'+t('tt_code')+'</span><span class="tt-value">'+code+'</span></div>';
+  html+='<div class="tt-row"><span class="tt-label">'+t('tt_level')+'</span><span class="tt-value">'+t(getLevelKey(code))+'</span></div>';
+  if(provName&&code!==provCode) html+='<div class="tt-row"><span class="tt-label">'+t('tt_province')+'</span><span class="tt-value">'+provName+'</span></div>';
   if(div.parent&&div.parent!=='100000'){
-    var pn = (state.allDivisions[div.parent]||{}).name||div.parent;
-    html += '<div class="tt-row"><span class="tt-label">Parent</span><span class="tt-value">'+pn+'</span></div>';
+    var pn=(state.allDivisions[div.parent]||{}).name||div.parent;
+    html+='<div class="tt-row"><span class="tt-label">'+t('tt_parent')+'</span><span class="tt-value">'+pn+'</span></div>';
   }
-  $tooltip.innerHTML = html;
-  $tooltip.style.display = 'block';
-  $tooltip.style.left = (e.offsetX+15)+'px';
-  $tooltip.style.top = (e.offsetY+10)+'px';
+  $tooltip.innerHTML=html;$tooltip.style.display='block';
+  $tooltip.style.left=(e.offsetX+15)+'px';$tooltip.style.top=(e.offsetY+10)+'px';
 }
 
-function getLevelLabel(code){
-  var c = String(code);
-  if(c==='100000')return 'Country';
-  if(/^\d{2}0000$/.test(c))return 'Province';
-  if(/^\d{4}00$/.test(c))return 'Prefecture';
-  return 'County';
+function getLevelKey(code){
+  var c=String(code);
+  if(c==='100000')return'level_country';
+  if(/^\d{2}0000$/.test(c))return'level_province';
+  if(/^\d{4}00$/.test(c))return'level_prefecture';
+  return'level_county';
 }
 
 // ------ MAP CLICK ------
-function handleMapClick(code, name){
-  state.selectedAdcode = code;
-
-  if(state.layer==='province'){
-    // Expand province to show prefectures
-    expandToPrefecture(code);
-  } else if(state.layer==='prefecture'){
-    // Show detail
-    showDetailPanel(code, name);
-  } else {
-    showDetailPanel(code, name);
-  }
+function handleMapClick(code,name){
+  state.selectedAdcode=code;
+  if(state.layer==='province'){expandToPrefecture(code);}
+  else{showDetailPanel(code,name);}
   updateSelectedVisual();
 }
 
 function expandToPrefecture(provCode){
-  state.expandedProvince = provCode;
-  state.layer = 'prefecture';
-  document.getElementById('statusLayer').textContent = 'PREFECTURE';
-  // Update layer buttons
-  document.querySelectorAll('.layer-btn').forEach(function(b){
-    b.classList.toggle('active', b.dataset.layer==='prefecture');
-  });
-  // Reset zoom and render prefecture data
-  state.selectedAdcode = null;
-  renderMap();
-  renderList();
+  state.expandedProvince=provCode;state.layer='prefecture';
+  document.getElementById('statusLayer').textContent=t('layer')+':PREFECTURE';
+  document.querySelectorAll('.layer-btn[data-layer]').forEach(function(b){b.classList.toggle('active',b.dataset.layer==='prefecture');});
+  state.selectedAdcode=null;renderMap();renderList();
 }
 
 // ------ DETAIL PANEL ------
-function showDetailPanel(code, name){
-  var div = state.allDivisions[code]||{};
-  var ld = state.leaderData[code]||{};
-  if(!div.name) div.name = name||code;
+function showDetailPanel(code,name){
+  var div=state.allDivisions[code]||{},ld=state.leaderData[code]||{};
+  if(!div.name)div.name=name||code;
+  $panelBadge.textContent=div.level?t('level_'+div.level):'—';
 
-  $panelBadge.textContent = div.level?div.level.toUpperCase():'—';
+  var html='';
+  html+='<div class="detail-section"><div class="ds-name">'+div.name+'</div>';
+  html+='<div class="ds-row"><span class="ds-label">'+t('lbl_code')+'</span><span class="ds-value">'+code+'</span></div>';
+  html+='<div class="ds-row"><span class="ds-label">'+t('lbl_level')+'</span><span class="ds-value">'+t(getLevelKey(code))+'</span></div>';
+  if(div.childrenNum!=null)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_children')+'</span><span class="ds-value">'+div.childrenNum+'</span></div>';
+  var peers=countPeers(code,div.parent);
+  if(peers>0)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_peers')+'</span><span class="ds-value">'+peers+'</span></div>';
+  html+='</div>';
 
-  var html = '';
-  // Name
-  html += '<div class="detail-section"><div class="ds-name">'+div.name+'</div>';
+  html+=buildHierarchyTree(code);
+  html+=buildCodeAnalysis(code);
 
-  // Key info
-  html += '<div class="ds-row"><span class="ds-label">Code</span><span class="ds-value">'+code+'</span></div>';
-  html += '<div class="ds-row"><span class="ds-label">Level</span><span class="ds-value">'+getLevelLabel(code)+'</span></div>';
-  if(div.childrenNum!=null) html += '<div class="ds-row"><span class="ds-label">Children</span><span class="ds-value">'+div.childrenNum+'</span></div>';
-  var peers = countPeers(code, div.parent);
-  if(peers>0) html += '<div class="ds-row"><span class="ds-label">Peers</span><span class="ds-value">'+peers+'</span></div>';
-  html += '</div>';
-
-  // Hierarchy tree
-  html += buildHierarchyTree(code);
-
-  // Code analysis
-  html += buildCodeAnalysis(code);
-
-  // Leader info
   if(Object.keys(ld).length>1){
-    html += '<div class="detail-section"><div class="ds-title">LEADERSHIP</div>';
-    if(ld.sec) html += '<div class="ds-row"><span class="ds-label">Secretary</span><span class="ds-value">'+ld.sec+'</span></div>';
-    if(ld.secDep) html += '<div class="ds-row"><span class="ds-label">Deputy Sec.</span><span class="ds-value">'+ld.secDep+'</span></div>';
-    if(ld.gov) html += '<div class="ds-row"><span class="ds-label">Governor</span><span class="ds-value">'+ld.gov+'</span></div>';
-    if(ld.govDep) html += '<div class="ds-row"><span class="ds-label">Deputy Gov.</span><span class="ds-value">'+ld.govDep+'</span></div>';
-    if(ld.rd) html += '<div class="ds-row"><span class="ds-label">Congress Chair</span><span class="ds-value">'+ld.rd+'</span></div>';
-    if(ld.cppcc) html += '<div class="ds-row"><span class="ds-label">CPPCC Chair</span><span class="ds-value">'+ld.cppcc+'</span></div>';
-    html += '</div>';
+    html+='<div class="detail-section"><div class="ds-title">'+t('ds_leadership')+'</div>';
+    if(ld.sec)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_sec')+'</span><span class="ds-value">'+ld.sec+'</span></div>';
+    if(ld.secDep)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_secdep')+'</span><span class="ds-value">'+ld.secDep+'</span></div>';
+    if(ld.gov)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_gov')+'</span><span class="ds-value">'+ld.gov+'</span></div>';
+    if(ld.govDep)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_govdep')+'</span><span class="ds-value">'+ld.govDep+'</span></div>';
+    if(ld.rd)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_rd')+'</span><span class="ds-value">'+ld.rd+'</span></div>';
+    if(ld.cppcc)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_cppcc')+'</span><span class="ds-value">'+ld.cppcc+'</span></div>';
+    html+='</div>';
   }
 
-  // Relationship navigation
-  html += '<div class="detail-section"><div class="ds-title">NAVIGATION</div>';
-  if(div.parent && div.parent!=='100000'){
-    var pn = (state.allDivisions[div.parent]||{}).name||div.parent;
-    html += '<div class="ds-row"><span class="ds-label">Parent</span><span class="ds-value clickable" onclick="navigateTo(\''+div.parent+'\',\''+pn+'\')">'+pn+' &rarr;</span></div>';
+  html+='<div class="detail-section"><div class="ds-title">'+t('ds_nav')+'</div>';
+  if(div.parent&&div.parent!=='100000'){
+    var pn=(state.allDivisions[div.parent]||{}).name||div.parent;
+    html+='<div class="ds-row"><span class="ds-label">'+t('lbl_parent')+'</span><span class="ds-value clickable" onclick="navigateTo(\''+div.parent+'\',\''+pn+'\')">'+pn+' &rarr;</span></div>';
   }
-  var provCode = getProvCode(code)+'0000';
-  if(code!==provCode && div.level!=='province'){
-    var prvName = (state.allDivisions[provCode]||{}).name||'';
-    if(prvName){
-      html += '<div class="ds-row"><span class="ds-label">Province</span><span class="ds-value clickable" onclick="navigateTo(\''+provCode+'\',\''+prvName+'\')">'+prvName+' &rarr;</span></div>';
-    }
+  var provCode=getProvCode(code)+'0000';
+  if(code!==provCode&&div.level!=='province'){
+    var prvName=(state.allDivisions[provCode]||{}).name||'';
+    if(prvName)html+='<div class="ds-row"><span class="ds-label">'+t('lbl_province')+'</span><span class="ds-value clickable" onclick="navigateTo(\''+provCode+'\',\''+prvName+'\')">'+prvName+' &rarr;</span></div>';
   }
-  html += '</div>';
+  html+='</div>';
 
-  // Compare action
-  html += '<div style="margin-top:12px"><button class="layer-btn" onclick="addToCompare(\''+code+'\',\''+(div.name||name)+'\')" style="width:100%">+ ADD TO COMPARE</button></div>';
-
-  $dataPanel.innerHTML = html;
+  html+='<div style="margin-top:12px"><button class="layer-btn" onclick="addToCompare(\''+code+'\',\''+(div.name||name)+'\')" style="width:100%">'+t('lbl_add_compare')+'</button></div>';
+  $dataPanel.innerHTML=html;
 }
 
-function navigateTo(code, name){
-  if(!state.allDivisions[code]) return;
-  state.selectedAdcode = code;
-  var level = state.allDivisions[code].level;
-  if(level==='province'){
-    state.layer = 'province';
-    document.getElementById('statusLayer').textContent = 'PROVINCE';
-    document.querySelectorAll('.layer-btn').forEach(function(b){
-      b.classList.toggle('active', b.dataset.layer==='province');
-    });
-  }
-  renderMap();
-  showDetailPanel(code, name);
-  renderList();
+function navigateTo(code,name){
+  if(!state.allDivisions[code])return;
+  state.selectedAdcode=code;
+  var level=state.allDivisions[code].level;
+  if(level==='province'){state.layer='province';document.getElementById('statusLayer').textContent=t('layer')+':PROVINCE';document.querySelectorAll('.layer-btn[data-layer]').forEach(function(b){b.classList.toggle('active',b.dataset.layer==='province');});}
+  renderMap();showDetailPanel(code,name);renderList();
 }
 
-function countPeers(code, parent){
-  var p = parent||'';
-  var cnt=0;
-  for(var k in state.allDivisions){
-    if(k===code)continue;
-    if(state.allDivisions[k].parent===p)cnt++;
-  }
-  return cnt;
-}
+function countPeers(code,parent){var p=parent||'',cnt=0;for(var k in state.allDivisions){if(k===code)continue;if(state.allDivisions[k].parent===p)cnt++;}return cnt;}
 
 // ------ HIERARCHY TREE ------
 function buildHierarchyTree(code){
-  var div = state.allDivisions[code]||{};
-  var html = '<div class="detail-section"><div class="ds-title">ADMINISTRATIVE HIERARCHY</div><div class="hierarchy">';
-
-  // Build path from code upward
-  var path = [];
-  var cur = code;
-  while(cur && cur!=='100000'){
-    var d = state.allDivisions[cur]||{};
-    path.unshift({code:cur, name:d.name||cur, level:d.level||''});
-    cur = d.parent||'';
-    if(cur===code)break;
-  }
-  // Add China root
-  path.unshift({code:'100000', name:'中华人民共和国', level:'country'});
-
+  var div=state.allDivisions[code]||{};
+  var html='<div class="detail-section"><div class="ds-title">'+t('ds_hierarchy')+'</div><div class="hierarchy">';
+  var path=[],cur=code;
+  while(cur&&cur!=='100000'){var d=state.allDivisions[cur]||{};path.unshift({code:cur,name:d.name||cur,level:d.level||''});cur=d.parent||'';if(cur===code)break;}
+  path.unshift({code:'100000',name:LANG==='zh'?'中华人民共和国':'China',level:'country'});
   for(var i=0;i<path.length;i++){
-    var p = path[i];
-    var isLast = (i===path.length-1);
-    var prefix = '';
-    for(var j=0;j<i;j++) prefix += '&nbsp;&nbsp;&nbsp;';
-    if(i>0) prefix += '&#9492; ';
-    var cls = isLast?'active':(i<path.length-1?'clickable':'');
-    var onclick = (i<path.length-1)?' onclick="navigateTo(\''+p.code+'\',\''+p.name+'\')"':'';
-    html += '<div class="h-node'+(i===0?' root':'')+'"><span class="h-bullet">'+(i===0?'&#9679;':'&#9675;')+'</span><span class="h-name '+cls+'"'+onclick+'>'+p.name+'</span></div>';
+    var p=path[i],isLast=(i===path.length-1);
+    var cls=isLast?'active':(i<path.length-1?'clickable':'');
+    var onclick=(i<path.length-1)?' onclick="navigateTo(\''+p.code+'\',\''+p.name+'\')"':'';
+    html+='<div class="h-node'+(i===0?' root':'')+'"><span class="h-bullet">'+(i===0?'&#9679;':'&#9675;')+'</span><span class="h-name '+cls+'"'+onclick+'>'+p.name+'</span></div>';
   }
-  html += '</div></div>';
-  return html;
+  html+='</div></div>';return html;
 }
 
 // ------ CODE ANALYSIS ------
 function buildCodeAnalysis(code){
-  var c = String(code);
-  if(c.length!==6)return'';
-  var p1=c.substring(0,2), p2=c.substring(0,4);
-  var provName=(state.allDivisions[p1+'0000']||{}).name||'';
+  var c=String(code);if(c.length!==6)return'';
+  var p1=c.substring(0,2),p2=c.substring(0,4);
+  var provName=(state.allDivisions[p1+'0000']||{}).name||'';if(!provName&&p1==='71')provName='台湾省';
   var prefName='';
-  if(p2!==p1+'00'){
-    prefName=(state.allDivisions[p2+'00']||{}).name||(state.allDivisions[p2]||{}).name||'';
-    if(prefName&&prefName===provName) prefName='';
-  }
-
-  var html='<div class="detail-section"><div class="ds-title">CODE ANALYSIS</div><div class="code-blocks">';
-  html+='<div class="code-block"><div class="cb-code">'+c+'</div><div class="cb-name">Full Code</div></div>';
-  html+='<div class="code-block"><div class="cb-code">'+p1+'</div><div class="cb-name">'+provName+'<span class="cb-level">Province</span></div></div>';
-  if(prefName){
-    html+='<div class="code-block"><div class="cb-code">'+p2+'</div><div class="cb-name">'+prefName+'<span class="cb-level">Prefecture</span></div></div>';
-  }
-  html+='<div class="code-block"><div class="cb-code">'+c.substring(4,6)+'</div><div class="cb-name">Division ID<span class="cb-level">Local</span></div></div>';
-  html+='</div></div>';
-  return html;
+  if(p2!==p1+'00'){prefName=(state.allDivisions[p2+'00']||{}).name||(state.allDivisions[p2]||{}).name||'';if(prefName&&prefName===provName)prefName='';}
+  var html='<div class="detail-section"><div class="ds-title">'+t('ds_code')+'</div><div class="code-blocks">';
+  html+='<div class="code-block"><div class="cb-code">'+c+'</div><div class="cb-name">'+t('lbl_fullcode')+'</div></div>';
+  html+='<div class="code-block"><div class="cb-code">'+p1+'</div><div class="cb-name">'+provName+'<span class="cb-level">'+t('lbl_province_id')+'</span></div></div>';
+  if(prefName)html+='<div class="code-block"><div class="cb-code">'+p2+'</div><div class="cb-name">'+prefName+'<span class="cb-level">'+t('lbl_pref_id')+'</span></div></div>';
+  html+='<div class="code-block"><div class="cb-code">'+c.substring(4,6)+'</div><div class="cb-name">'+t('lbl_local_id')+'</div></div>';
+  html+='</div></div>';return html;
 }
 
 // ------ RENDER LIST ------
 function renderList(){
-  var list = [];
+  var list=state.layer==='province'?state.provinceList:(state.layer==='prefecture'?state.prefectureList:state.countyList.slice(0,500));
+  state.currentList=list;
+  var html='';
   if(state.layer==='province'){
-    list = state.provinceList;
-  } else if(state.layer==='prefecture'){
-    list = state.prefectureList;
-  } else {
-    list = state.countyList.slice(0,500);
-  }
-
-  state.currentList = list;
-
-  var html = '';
-  // Group by parent for prefecture/county
-  if(state.layer==='province'){
-    html += '<div class="list-header">PROVINCES ('+list.length+')</div>';
+    html+='<div class="list-header">'+t('province_list')+' ('+list.length+')</div>';
     list.forEach(function(item){
-      var active = (item.adcode===state.selectedAdcode);
-      html += '<div class="area-item'+(active?' active':'')+'" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
+      html+='<div class="area-item'+(item.adcode===state.selectedAdcode?' active':'')+'" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
     });
-  } else if(state.layer==='prefecture'){
-    // Group by province
-    var groups = {};
-    list.forEach(function(item){
-      var prov = item.parent||'';
-      if(!groups[prov])groups[prov]=[];
-      groups[prov].push(item);
-    });
+  }else if(state.layer==='prefecture'){
+    var groups={};
+    list.forEach(function(item){var prov=item.parent||'';if(!groups[prov])groups[prov]=[];groups[prov].push(item);});
     for(var prov in groups){
-      var pname = (state.allDivisions[prov]||{}).name||prov;
-      html += '<div class="list-header">'+pname+' ('+groups[prov].length+')</div>';
+      var pname=(state.allDivisions[prov]||{}).name||prov;
+      html+='<div class="list-header">'+pname+' ('+groups[prov].length+')</div>';
       groups[prov].forEach(function(item){
-        var active = (item.adcode===state.selectedAdcode);
-        html += '<div class="area-item'+(active?' active':'')+'" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
+        html+='<div class="area-item'+(item.adcode===state.selectedAdcode?' active':'')+'" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
       });
     }
-  } else {
-    html += '<div class="list-header">COUNTIES ('+list.length+' shown)</div>';
+  }else{
+    html+='<div class="list-header">'+t('county_list')+' ('+list.length+' '+t('shown')+')</div>';
     list.forEach(function(item){
-      html += '<div class="area-item" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
+      html+='<div class="area-item" data-code="'+item.adcode+'" onclick="navigateTo(\''+item.adcode+'\',\''+item.name+'\')"><span>'+item.name+'</span><span class="ai-code">'+item.adcode+'</span></div>';
     });
   }
-  $dataList.innerHTML = html;
+  $dataList.innerHTML=html;
 }
 
 // ------ SEARCH ------
 function search(val){
-  var q = (val||'').trim().toLowerCase();
-  var results = [];
-
-  if(!q){
-    renderList();
-    return;
-  }
-
-  // Search all divisions
-  for(var k in state.allDivisions){
-    var d = state.allDivisions[k];
-    if(!d||!d.name)continue;
-    if(d.name.toLowerCase().includes(q) || k.includes(q)){
-      results.push(d);
-    }
-  }
-
-  // Limit results
-  results = results.slice(0,100);
-
-  var html = '<div class="list-header">SEARCH RESULTS ('+results.length+')</div>';
-  if(results.length===0){
-    html += '<div class="empty-state" style="padding:20px">No results found</div>';
-  } else {
-    results.forEach(function(d){
-      html += '<div class="area-item" data-code="'+d.adcode+'" onclick="navigateTo(\''+d.adcode+'\',\''+d.name+'\')"><span>'+d.name+'</span><span class="ai-code">'+d.adcode+'</span></div>';
-    });
-  }
-  $dataList.innerHTML = html;
+  var q=(val||'').trim().toLowerCase();
+  if(!q){renderList();return;}
+  var results=[];
+  for(var k in state.allDivisions){var d=state.allDivisions[k];if(!d||!d.name)continue;if(d.name.toLowerCase().includes(q)||k.includes(q))results.push(d);}
+  results=results.slice(0,100);
+  var html='<div class="list-header">'+t('search_results')+' ('+results.length+')</div>';
+  if(results.length===0){html+='<div class="empty-state" style="padding:20px">'+t('no_results')+'</div>';}
+  else{results.forEach(function(d){html+='<div class="area-item" data-code="'+d.adcode+'" onclick="navigateTo(\''+d.adcode+'\',\''+d.name+'\')"><span>'+d.name+'</span><span class="ai-code">'+d.adcode+'</span></div>';});}
+  $dataList.innerHTML=html;
 }
 
 // ------ COMPARE MODE ------
-function addToCompare(code, name){
-  if(state.compareSlots.length>=2){
-    state.compareSlots.shift();
-  }
+function addToCompare(code,name){
+  if(state.compareSlots.length>=2)state.compareSlots.shift();
   state.compareSlots.push({code:code,name:name});
-  if(state.compareSlots.length===2){
-    openCompare();
-  } else {
-    $panelBadge.textContent = 'COMPARE: 1/2 SELECTED';
-  }
+  if(state.compareSlots.length===2){openCompare();}
+  else{$panelBadge.textContent=t('compare_1of2');}
 }
-
 function openCompare(){
-  var a = state.compareSlots[0];
-  var b = state.compareSlots[1];
-  if(!a||!b)return;
-  var html = '';
+  var a=state.compareSlots[0],b=state.compareSlots[1];if(!a||!b)return;
+  var html='';
   [a,b].forEach(function(slot){
-    var d = state.allDivisions[slot.code]||{};
-    var ld = state.leaderData[slot.code]||{};
-    html += '<div class="compare-col">';
-    html += '<div class="cc-name">'+slot.name+'</div>';
-    html += '<div class="compare-row"><span class="cr-label">Code</span><span class="cr-value">'+slot.code+'</span></div>';
-    html += '<div class="compare-row"><span class="cr-label">Level</span><span class="cr-value">'+getLevelLabel(slot.code)+'</span></div>';
-    if(d.parent) html += '<div class="compare-row"><span class="cr-label">Parent</span><span class="cr-value">'+(state.allDivisions[d.parent]||{}).name||d.parent+'</span></div>';
-    if(ld.sec) html += '<div class="compare-row"><span class="cr-label">Secretary</span><span class="cr-value">'+ld.sec+'</span></div>';
-    if(ld.gov) html += '<div class="compare-row"><span class="cr-label">Governor</span><span class="cr-value">'+ld.gov+'</span></div>';
-    html += '</div>';
+    var d=state.allDivisions[slot.code]||{},ld=state.leaderData[slot.code]||{};
+    html+='<div class="compare-col"><div class="cc-name">'+slot.name+'</div>';
+    html+='<div class="compare-row"><span class="cr-label">'+t('lbl_code')+'</span><span class="cr-value">'+slot.code+'</span></div>';
+    html+='<div class="compare-row"><span class="cr-label">'+t('lbl_level')+'</span><span class="cr-value">'+t(getLevelKey(slot.code))+'</span></div>';
+    if(d.parent)html+='<div class="compare-row"><span class="cr-label">'+t('lbl_parent')+'</span><span class="cr-value">'+(state.allDivisions[d.parent]||{}).name||d.parent+'</span></div>';
+    if(ld.sec)html+='<div class="compare-row"><span class="cr-label">'+t('lbl_sec')+'</span><span class="cr-value">'+ld.sec+'</span></div>';
+    if(ld.gov)html+='<div class="compare-row"><span class="cr-label">'+t('lbl_gov')+'</span><span class="cr-value">'+ld.gov+'</span></div>';
+    html+='</div>';
   });
-  $compareBody.innerHTML = html;
-  $compareOverlay.classList.add('active');
+  $compareBody.innerHTML=html;$compareOverlay.classList.add('active');
 }
-
-function closeCompare(){
-  $compareOverlay.classList.remove('active');
-  state.compareSlots = [];
-  $panelBadge.textContent = '—';
-}
+function closeCompare(){$compareOverlay.classList.remove('active');state.compareSlots=[];$panelBadge.textContent='—';}
 
 // ------ LAYER TOGGLE ------
 function switchLayer(layer){
-  state.layer = layer;
-  state.selectedAdcode = null;
-  state.expandedProvince = null;
-  document.getElementById('statusLayer').textContent = layer.toUpperCase();
-  document.querySelectorAll('.layer-btn').forEach(function(b){
-    b.classList.toggle('active', b.dataset.layer===layer);
-  });
-  renderMap();
-  renderList();
-  $dataPanel.innerHTML = '<div class="empty-state"><div class="es-icon">&#9678;</div><div>Select a division to view details</div></div>';
-  $panelBadge.textContent = '—';
+  state.layer=layer;state.selectedAdcode=null;state.expandedProvince=null;
+  document.getElementById('statusLayer').textContent=t('layer')+':'+layer.toUpperCase();
+  document.querySelectorAll('.layer-btn[data-layer]').forEach(function(b){b.classList.toggle('active',b.dataset.layer===layer);});
+  renderMap();renderList();
+  $dataPanel.innerHTML='<div class="empty-state" id="panelEmpty"><div class="es-icon">&#9678;</div><div>'+t('empty_title')+'</div><div>'+t('empty_sub')+'</div><div style="margin-top:8px;font-size:10px">'+t('empty_hint')+'</div></div>';
+  $panelBadge.textContent='—';
 }
 
 // ------ EVENTS ------
 function bindEvents(){
-  // Layer buttons
-  document.querySelectorAll('.layer-btn[data-layer]').forEach(function(b){
-    b.addEventListener('click', function(){
-      switchLayer(b.dataset.layer);
-    });
-  });
-
-  // Reset button
-  document.getElementById('btnReset').addEventListener('click', function(){
-    switchLayer('province');
-  });
-
-  // Compare button
-  document.getElementById('btnCompare').addEventListener('click', function(){
-    state.compareSlots = [];
-    $panelBadge.textContent = 'COMPARE: CLICK 2 DIVISIONS';
-  });
-
-  // Search
-  $searchInput.addEventListener('input', function(){
-    search(this.value);
-  });
-
-  // Keyboard shortcuts
-  document.addEventListener('keydown', function(e){
-    if(e.key==='/' && document.activeElement!==$searchInput){
-      e.preventDefault();
-      $searchInput.focus();
-    }
-    if(e.key==='Escape'){
-      $searchInput.blur();
-      closeCompare();
-    }
+  document.querySelectorAll('.layer-btn[data-layer]').forEach(function(b){b.addEventListener('click',function(){switchLayer(b.dataset.layer);});});
+  document.getElementById('btnReset').addEventListener('click',function(){switchLayer('province');});
+  document.getElementById('btnCompare').addEventListener('click',function(){state.compareSlots=[];$panelBadge.textContent=t('compare_empty');});
+  $searchInput.addEventListener('input',function(){search(this.value);});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&document.activeElement!==$searchInput){e.preventDefault();$searchInput.focus();}
+    if(e.key==='Escape'){$searchInput.blur();closeCompare();}
     if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
-      // Navigate peers
       if(state.selectedAdcode){
-        var peers = [];
-        var sel = state.allDivisions[state.selectedAdcode];
-        if(sel){
-          for(var k in state.allDivisions){
-            if(state.allDivisions[k].parent===sel.parent && k!==state.selectedAdcode){
-              peers.push(k);
-            }
-          }
-          if(peers.length>0){
-            var curIdx = peers.indexOf(state.selectedAdcode);
-            if(e.key==='ArrowRight') curIdx = Math.min(curIdx+1,peers.length-1);
-            else curIdx = Math.max(curIdx-1,0);
-            if(peers[curIdx]){
-              navigateTo(peers[curIdx], state.allDivisions[peers[curIdx]].name);
-            }
+        var sel=state.allDivisions[state.selectedAdcode],peers=[];
+        if(sel){for(var k in state.allDivisions){if(state.allDivisions[k].parent===sel.parent&&k!==state.selectedAdcode)peers.push(k);}
+          if(peers.length>0){var curIdx=peers.indexOf(state.selectedAdcode);
+            if(e.key==='ArrowRight')curIdx=Math.min(curIdx+1,peers.length-1);else curIdx=Math.max(curIdx-1,0);
+            if(peers[curIdx])navigateTo(peers[curIdx],state.allDivisions[peers[curIdx]].name);
           }
         }
       }
     }
   });
-
-  // Resize
-  window.addEventListener('resize', function(){
-    if(state.chart) state.chart.resize();
-  });
+  window.addEventListener('resize',function(){if(state.chart)state.chart.resize();});
 }
 
 // ------ START ------
-document.addEventListener('DOMContentLoaded', init);
-
-// Expose for onclick attributes
-window.navigateTo = navigateTo;
-window.addToCompare = addToCompare;
-window.closeCompare = closeCompare;
+document.addEventListener('DOMContentLoaded',init);
+window.navigateTo=navigateTo;
+window.addToCompare=addToCompare;
+window.closeCompare=closeCompare;
 })();
 </script>
 </body>
