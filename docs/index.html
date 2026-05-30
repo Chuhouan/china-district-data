@@ -462,10 +462,11 @@ function expandCity(ca){
 }
 
 function renderAll(){
-  if(!chart){chart=echarts.init(document.getElementById('map'));window.addEventListener('resize',function(){if(chart)chart.resize();});}
+  if(!chart && typeof echarts!=='undefined'){try{chart=echarts.init(document.getElementById('map'));window.addEventListener('resize',function(){if(chart)chart.resize();});}catch(e){}}
   var geoData=currentMode==='city'&&cityGeo?cityGeo:chinaGeo;
 
-  // 即使没有GeoJSON，也渲染左侧列表 + 右侧详情
+  // 即使没有ECharts/GeoJSON，也渲染左侧列表 + 右侧详情
+  if(!chart){renderSidebar();return;}
   if(!geoData){
     renderSidebar();
     return;
@@ -646,7 +647,6 @@ async function toHome(){
     currentZoom=1.0;
     currentMode='province';
     document.getElementById('modeProvince').style.fontWeight='600';
-    renderAll();
   }catch(e){
     console.log('GeoJSON加载失败，显示数据列表模式');
     // 直接用API数据显示城市列表
@@ -654,8 +654,8 @@ async function toHome(){
     document.getElementById('modeCity').style.fontWeight='600';
     document.getElementById('modeProvince').style.fontWeight='normal';
     cityGeo=null;
-    renderAll();
   }
+  try{renderAll();}catch(e){console.log('渲染异常:',e);}
 }
 document.addEventListener('DOMContentLoaded',function(){document.body.classList.add('dark');document.getElementById('darkToggle').textContent='☀️ 亮色';toHome();});
 
