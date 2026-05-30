@@ -515,19 +515,19 @@ function renderAll(){
     var pv=r.a.substring(2)==='0000',ct=(!pv&&r.a.substring(4)==='00');
     var bc,bw;
     var isDark=document.body.classList.contains('dark');
-    var expColor=isDark?'#ff6b35':'#e74c3c';
-    var ctColor=isDark?'#ffd700':'#e67e22';
-    // 选中的区域用展开色突出 + 浅色填充
+    var highlightColor=isDark?'#ffd700':'#e67e22';  // 展开区域统一橙色边框
+    var selectedColor=isDark?'#ff6b35':'#e74c3c';   // 选中区域用红色
+    // 选中的区域用红色浅填充 + 加深边框
     var isSelected=(r.a===selectedAdcode);
     if(isSelected){
       var fillColor=isDark?'rgba(255,80,80,0.2)':'rgba(231,76,60,0.15)';
-      bc=pv?expColor:ctColor;bw=3.0;
+      bc=highlightColor;bw=3.0;
       return {name:r.n,adcode:r.a,itemStyle:{areaColor:fillColor,borderColor:bc,borderWidth:bw}};
     }
     if(isExp){
-      bc=pv?expColor:ctColor;
-      bw=pv?2.2:1.8;
-      // 被展开的省级/市级名称隐藏
+      bc=highlightColor;
+      bw=1.8;
+      // 被展开的父级区域隐藏名称
       if((pv&&expandedProvinces[r.a])||(ct&&expandedCities[r.a])){
         return {name:r.n,adcode:r.a,itemStyle:{borderColor:bc,borderWidth:bw},label:{show:true,fontSize:0,color:'transparent'}};
       }
