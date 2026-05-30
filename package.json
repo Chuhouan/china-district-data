@@ -1,0 +1,16 @@
+{
+  "name": "china-district-data",
+  "version": "1.0.0",
+  "description": "中国行政区划数据平台 - 自动抓取更新服务",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "scrape": "node scraper.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cheerio": "^1.0.0-rc.12",
+    "axios": "^1.6.0",
+    "node-cron": "^3.0.3"
+  }
+}

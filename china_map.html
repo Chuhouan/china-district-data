@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>中国行政区划数据平台</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;background:#f0f2f6;color:#1a1a2e;display:flex;justify-content:center;padding:20px}
+.container{width:1500px;max-width:100%;background:#fff;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid #e8ecf0;background:#fafbfc}
+.topbar-left{display:flex;align-items:center;gap:24px}
+.logo{font-size:20px;font-weight:700;color:#1a1a2e;letter-spacing:1px;font-family:"Noto Serif SC","Noto Sans SC",serif}
+.logo small{font-size:12px;font-weight:300;color:#8890a0;margin-left:8px;letter-spacing:0.5px}
+.breadcrumb{display:flex;align-items:center;gap:4px;font-size:13px}
+.bc-btn{background:none;border:1px solid #d8dce4;color:#4a5070;padding:3px 12px;border-radius:2px;cursor:pointer;font-size:12px;font-family:inherit}
+.bc-btn:hover{background:#eef0f4;border-color:#b0b8c8}
+.bc-btn.active{background:#1a1a2e;border-color:#1a1a2e;color:#fff}
+.bc-sep{color:#b0b8c8;font-size:12px}
+.main-layout{display:flex}
+.left-sidebar{width:260px;flex-shrink:0;background:#fafbfc;display:flex;flex-direction:column;max-height:720px;overflow:hidden;border-right:1px solid #e8ecf0}
+.left-sidebar .sidebar-header{padding:14px 18px;border-bottom:1px solid #e8ecf0;display:flex;justify-content:space-between;align-items:center}
+.left-sidebar .sidebar-header h3{font-size:14px;font-weight:600;color:#1a1a2e}
+.left-sidebar .sidebar-header .badge{font-size:11px;padding:2px 10px;border-radius:2px;background:#eef0f4;color:#6a7090;border:1px solid #d8dce4}
+.search-box{width:100%;padding:8px 18px;border-bottom:1px solid #e8ecf0}
+.search-box input{width:100%;padding:6px 10px;border:1px solid #d8dce4;border-radius:2px;font-size:13px;font-family:inherit;outline:none;background:#fff;color:#1a1a2e}
+.search-box input:focus{border-color:#4a5070}
+body.dark .search-box{border-bottom-color:#30363d}
+body.dark .search-box input{background:#161b22;border-color:#30363d;color:#c9d1d9}
+body.dark .search-box input:focus{border-color:#58a6ff}
+.left-sidebar .sidebar-body{flex:1;overflow-y:auto;min-height:0;padding:14px 18px}
+.left-sidebar .sidebar-body::-webkit-scrollbar{width:4px}
+.left-sidebar .sidebar-body::-webkit-scrollbar-track{background:transparent}
+.left-sidebar .sidebar-body::-webkit-scrollbar-thumb{background:#c8cce0;border-radius:2px}
+.map-wrapper{flex:1;position:relative;min-width:0;overflow:hidden;height:720px;background:#fff}
+#map{width:100%;height:100%}
+.right-sidebar{width:360px;flex-shrink:0;background:#fafbfc;display:flex;flex-direction:column;max-height:720px;overflow:hidden;border-left:1px solid #e8ecf0}
+.right-sidebar .sidebar-header{padding:14px 18px;border-bottom:1px solid #e8ecf0;display:flex;justify-content:space-between;align-items:center}
+.right-sidebar .sidebar-header h3{font-size:14px;font-weight:600;color:#1a1a2e}
+.right-sidebar .sidebar-header .badge{font-size:11px;padding:2px 10px;border-radius:2px;background:#eef0f4;color:#6a7090;border:1px solid #d8dce4}
+.right-sidebar .sidebar-body{flex:1;overflow-y:auto;min-height:0;padding:14px 18px}
+.right-sidebar .sidebar-body::-webkit-scrollbar{width:4px}
+.right-sidebar .sidebar-body::-webkit-scrollbar-track{background:transparent}
+.right-sidebar .sidebar-body::-webkit-scrollbar-thumb{background:#c8cce0;border-radius:2px}
+.detail-card{background:#fff;border:1px solid #e8ecf0;border-radius:2px;padding:16px;margin-bottom:12px}
+.detail-card .dc-title{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #1a1a2e}
+.detail-card .dc-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f6;font-size:13px}
+.detail-card .dc-row:last-child{border-bottom:none}
+.detail-card .dc-label{color:#6a7090}
+.detail-card .dc-value{color:#1a1a2e;font-weight:500;text-align:right;max-width:60%}
+/* 对比模式 */
+.compare-card{display:flex;gap:0;margin-bottom:12px}
+.compare-card .cc-side{flex:1;background:#fff;border:1px solid #e8ecf0;border-radius:2px;padding:12px}
+.compare-card .cc-side:first-child{border-right:none;border-radius:2px 0 0 2px}
+.compare-card .cc-side:last-child{border-left:none;border-radius:0 2px 2px 0}
+.compare-card .cc-title{font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #1a1a2e;text-align:center}
+.compare-card .cc-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f2f6;font-size:12px}
+.compare-card .cc-row:last-child{border-bottom:none}
+.compare-card .cc-label{color:#6a7090}
+.compare-card .cc-value{color:#1a1a2e;font-weight:500;text-align:right;max-width:55%}
+.compare-hint{text-align:center;padding:20px;color:#b0b8c8;font-size:13px}
+body.dark .compare-card .cc-side{background:#161b22;border-color:#30363d}
+body.dark .compare-card .cc-title{color:#c9d1d9;border-bottom-color:#30363d}
+body.dark .compare-card .cc-row{border-bottom-color:#21262d}
+body.dark .compare-card .cc-label{color:#8b949e}
+body.dark .compare-card .cc-value{color:#c9d1d9}
+body.dark .compare-hint{color:#484f58}
+/* 更新记录 */
+.history-item{padding:10px 0;border-bottom:1px solid #f0f2f6;font-size:12px}
+.history-item:last-child{border-bottom:none}
+.history-item .hi-type{display:inline-block;padding:1px 6px;border-radius:2px;font-size:10px;margin-right:6px}
+.hi-success{background:#d4edda;color:#155724}
+.hi-error{background:#f8d7da;color:#721c24}
+.hi-info{background:#d1ecf1;color:#0c5460}
+.hi-start{background:#fff3cd;color:#856404}
+.history-item .hi-time{color:#8890a0;font-size:11px}
+.history-item .hi-detail{color:#4a5070;margin-top:2px}
+body.dark .history-item{border-bottom-color:#21262d}
+body.dark .history-item .hi-time{color:#6a7090}
+body.dark .history-item .hi-detail{color:#8b949e}
+body.dark .hi-success{background:#1e3a2f;color:#7ecb8e}
+body.dark .hi-error{background:#3a1e1e;color:#ff7b7b}
+body.dark .hi-info{background:#1e2a3a;color:#7bb8ff}
+body.dark .hi-start{background:#3a3520;color:#ffd700}
+body.dark .history-item .hi-detail a{color:#58a6ff!important}
+body.dark .history-item .hi-detail{color:#8b949e!important}
+.list-title{font-size:13px;font-weight:500;color:#6a7090;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e8ecf0}
+.list-title span{color:#b0b8c8;font-weight:400}
+.area-item{background:#fff;border:1px solid #e8ecf0;border-radius:2px;padding:12px 14px;margin-bottom:6px;cursor:pointer}
+.area-item:hover{background:#f5f7fa;border-color:#c8cce0}
+.area-item .ai-name{font-size:14px;font-weight:500;color:#1a1a2e}
+.area-item .ai-sub{font-size:12px;color:#8890a0;margin-top:2px}
+.empty-state{text-align:center;padding:60px 20px;color:#b0b8c8}
+.empty-state p{font-size:13px}
+.section-title{font-size:12px;font-weight:600;color:#6a7090;margin:10px 0 6px;padding-bottom:4px;border-bottom:1px solid #e8ecf0}
+/* 暗色模式 */
+body.dark{background:#0d1117;color:#c9d1d9}
+body.dark .container{background:#161b22;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+body.dark .topbar{background:#0d1117;border-bottom:1px solid #30363d}
+body.dark .logo{color:#c9d1d9}
+body.dark .logo small{color:#8b949e}
+body.dark .bc-btn{background:transparent;border-color:#30363d;color:#8b949e}
+body.dark .bc-btn:hover{background:#21262d;border-color:#484f58}
+body.dark .bc-btn.active{background:#30363d;border-color:#58a6ff;color:#58a6ff}
+body.dark .left-sidebar{background:#0d1117;border-right:1px solid #30363d}
+body.dark .left-sidebar .sidebar-header{border-bottom:1px solid #30363d}
+body.dark .left-sidebar .sidebar-header h3{color:#c9d1d9}
+body.dark .left-sidebar .sidebar-header .badge{background:#21262d;color:#8b949e;border-color:#30363d}
+body.dark .right-sidebar{background:#0d1117;border-left:1px solid #30363d}
+body.dark .right-sidebar .sidebar-header{border-bottom:1px solid #30363d}
+body.dark .right-sidebar .sidebar-header h3{color:#c9d1d9}
+body.dark .right-sidebar .sidebar-header .badge{background:#21262d;color:#8b949e;border-color:#30363d}
+body.dark .detail-card{background:#161b22;border-color:#30363d}
+body.dark .detail-card .dc-title{color:#c9d1d9;border-bottom-color:#30363d}
+body.dark .detail-card .dc-row{border-bottom-color:#21262d}
+body.dark .detail-card .dc-label{color:#8b949e}
+body.dark .detail-card .dc-value{color:#c9d1d9}
+body.dark .list-title{color:#8b949e;border-bottom-color:#30363d}
+body.dark .list-title span{color:#484f58}
+body.dark .area-item{background:#161b22;border-color:#30363d}
+body.dark .area-item:hover{background:#21262d;border-color:#484f58}
+body.dark .area-item .ai-name{color:#c9d1d9}
+body.dark .area-item .ai-sub{color:#8b949e}
+body.dark .empty-state{color:#484f58}
+body.dark .section-title{color:#8b949e;border-bottom-color:#30363d}
+body.dark .map-wrapper{background:#0d1117}
+.dark-toggle{display:flex;align-items:center;gap:6px;background:none;border:1px solid #d8dce4;color:#4a5070;padding:4px 12px;border-radius:2px;cursor:pointer;font-size:12px;font-family:inherit;margin-left:auto}
+.dark-toggle:hover{background:#eef0f4;border-color:#b0b8c8}
+body.dark .dark-toggle{border-color:#30363d;color:#8b949e}
+body.dark .dark-toggle:hover{background:#21262d;border-color:#484f58}
+@media(max-width:960px){.main-layout{flex-direction:column}.left-sidebar,.right-sidebar{width:100%;max-height:240px}.map-wrapper{height:400px}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="topbar">
+<div class="topbar-left">
+<div class="logo">中国行政区划<small>数据查询平台</small></div>
+<div class="breadcrumb" id="breadcrumb"></div>
+</div>
+<button class="bc-btn" id="modeProvince" onclick="setMapMode('province')" style="font-weight:600">省级</button>
+<button class="bc-btn" id="modeCity" onclick="setMapMode('city')">市级</button>
+<button class="dark-toggle" id="labelToggle" onclick="toggleLabels()" style="margin-right:6px">🏷️ 地名</button>
+<button class="dark-toggle" id="compareToggle" onclick="toggleCompare()" style="margin-right:6px">📊 对比</button>
+<button class="dark-toggle" id="historyToggle" onclick="toggleHistory()" style="margin-right:6px">📋 更新记录</button>
+<button class="dark-toggle" id="darkToggle" onclick="toggleDark()">🌙 暗色</button>
+</div>
+<div class="main-layout">
+<div class="left-sidebar">
+<div class="sidebar-header"><h3 id="leftPanelTitle">省份列表</h3><span class="badge" id="leftPanelBadge">省级</span></div>
+<div class="search-box"><input type="text" id="searchInput" placeholder="搜索省份/城市..." oninput="searchList(this.value)"></div>
+<div class="sidebar-body" id="leftPanelContent"><div class="empty-state"><p>加载中...</p></div></div>
+</div>
+<div class="map-wrapper"><div id="map"></div></div>
+<div class="right-sidebar">
+<div class="sidebar-header"><h3 id="rightPanelTitle">地区详情</h3><span class="badge" id="rightPanelBadge">--</span></div>
+<div class="sidebar-body" id="rightPanelContent"><div class="empty-state"><p>点击地图上的区域查看详情</p></div></div>
+</div>
+</div>
+</div>
+<script>
+// ========== 省级数据（31省区市，2026年5月） ==========
+var D={
+'110000':{n:'北京市',p:'2188.6万',a:'1.64万km2',g:'5.00万亿',sec:'尹力',secDep:'游钧',secComm:'陈健、李成林、夏林茂、靳伟、孙军民、赵磊、于英杰、朱军、谈绪祥、马骏',gov:'殷勇',govDep:'夏林茂、靳伟、司马红、穆鹏、孙硕、秦运彪、文献、唐文弘',govSec:'曾劲',rd:'尹力',rdDep:'游钧、齐静、庞丽娟、侯君舒、于军、王建中',rdSec:'王建中（兼）',cppcc:'魏小东',cppccDep:'崔述强、张家明、卢彦、王红、刘忠范、燕瑛、王金南、郭延红',cppccSec:'刘占兴',cp:'16区',seat:'通州区'},
+'120000':{n:'天津市',p:'1360万',a:'1.19万km2',g:'1.80万亿',sec:'陈敏尔',secDep:'张工、刘桂平',secComm:'连茂君、周德睿、王旭、郭永红、沈蕾、王力军、曲孝丽、王庭凯、冀国强、李文海',gov:'张工',govDep:'王旭、李文海、谢元、王瑛玮、王宝雨、翟立新、王秀峰',govSec:'胡学明',rd:'喻云林',rdDep:'赵飞、马顺清、张庆恩、马延和、殷向杰、张凤宝',rdSec:'李清',cppcc:'王常松',cppccDep:'孙文魁、李绍洪、尚斌义、张金英、齐成喜、王建国、高秀梅、张凤华',cppccSec:'戴永康',cp:'16区',seat:'河西区'},
+'130000':{n:'河北省',p:'7393万',a:'18.88万km2',g:'4.76万亿',sec:'倪岳峰',secDep:'王正谱、王陆进',secComm:'张超超、张国华、刘昌林、柯俊、左力、董晓宇、武卫东、张成中、常斌、傅晓东',gov:'王正谱',govDep:'张成中、时清霜、胡启生、金晖、王立彤、董兆伟、赵大春',govSec:'朱浩文',rd:'倪岳峰',rdDep:'董仚生、周仲明、张妹芝、高云霄、吴晓华、陈平',rdSec:'朱浩文',cppcc:'张国华',cppccDep:'冉万祥、葛会波、卢晓光、边发吉、苏银增、王宝山、常丽虹、康振海',cppccSec:'陈书增',cp:'11地级市',seat:'石家庄市'},
+'140000':{n:'山西省',p:'3424万',a:'15.67万km2',g:'2.55万亿',sec:'唐登杰',secDep:'卢东亮、王拥军',secComm:'李金科、董晓宇、汪海洲、胡立杰、张碧涌、赵红严、林红玉、张韶华',gov:'卢东亮',govDep:'董晓宇、汪海洲、景普秋、朱晓东、常书铭、徐朝锋',govSec:'李秋柱',rd:'唐登杰',rdDep:'罗清宇、贺天才、谢红、吴俊清、李俊明、王纯',rdSec:'郭海刚',cppcc:'张春林',cppccDep:'徐广国、张吉福、郑连生、张复明、李晓波、李青山、李思进、汤志平、王立伟、闫晨曦、王蕾',cppccSec:'毛益民',cp:'11地级市',seat:'太原市'},
+'150000':{n:'内蒙古',p:'2400万',a:'118.3万km2',g:'2.65万亿',sec:'王伟中',secDep:'包钢、时光辉',secComm:'黄志强、李玉刚、郑宏范、丁绣峰、孟宪东、孟繁利、胡达古拉、于立新、张韶春',gov:'包钢',govDep:'黄志强、奇巴图、郑光照、代钦、孙俊青、唐毅、苏和',govSec:'郑东波',rd:'王伟中',rdDep:'张韶春、郑宏范、丁绣峰、孟宪东、李玉刚、艾丽华、李秉荣',rdSec:'万超岐',cppcc:'张延昆',cppccDep:'罗志虎、其其格、魏国楠、安润生、张磊、杨劼、孙俊青、杨牧',cppccSec:'杨利民',cp:'12地级市',seat:'呼和浩特市'},
+'210000':{n:'辽宁省',p:'4145万',a:'14.86万km2',g:'3.26万亿',sec:'许昆林',secDep:'王新伟、熊茂平',secComm:'李猛、张立林、隋青、赵承、蒋天宝、姜有为、霍步刚、孟凡清、郑艺',gov:'王新伟',govDep:'张立林、王利波、楚天运、吴春耕、顾军',govSec:'赵颖',rd:'许昆林',rdDep:'陈向群、范继英、崔枫林、张铁民、康捷、杨关林、于国安',rdSec:'于国安（兼）',cppcc:'周波',cppccDep:'戴玉林、卢柯、姜军、赵延庆、余功斌、温雪琼、刘中民、邵林',cppccSec:'王德佳',cp:'14地级市',seat:'沈阳市'},
+'220000':{n:'吉林省',p:'2337万',a:'18.74万km2',g:'1.44万亿',sec:'黄强',secDep:'胡玉亭、吴海英',secComm:'胡家福、蔡东、张恩惠、邱江、史文斌、王子联、曹路宝、李明伟、李明祥',gov:'胡玉亭',govDep:'蔡东、刘凯、孙简、刘伟、陈育煌',govSec:'洪庆',rd:'黄强',rdDep:'田锦尘、范锐平、贾晓东、郝国昆、李龙熙、李伟',rdSec:'李中新',cppcc:'朱国贤',cppccDep:'李龙德、李维斗、郭乃硕、蔡国伟、秦海涛、刘化文、梁仁哲',cppccSec:'刘伟',cp:'9地级市',seat:'长春市'},
+'230000':{n:'黑龙江省',p:'3048万',a:'47.3万km2',g:'1.64万亿',sec:'许勤',secDep:'梁惠玲、刘惠',secComm:'边学文、杨博、于洪涛、赵忠、陈少波、徐向国、王岚、刘振国',gov:'梁惠玲',govDep:'陈少波、余建、李毅、韩圣健、张起翔、丛丽',govSec:'常城',rd:'许勤',rdDep:'张安顺、王永康、贾玉梅、聂云凌、杨廷双、方传龙',rdSec:'宋宏伟',cppcc:'蓝绍敏',cppccDep:'张显友、马立群、庞达、迟子建、韩立华、钱福永、张亚中、邵国强、徐建国',cppccSec:'徐利刃',cp:'13地级市',seat:'哈尔滨市'},
+'310000':{n:'上海市',p:'2489.4万',a:'0.63万km2',g:'5.67万亿',sec:'陈吉宁',secDep:'龚正、朱忠明',secComm:'迟耀云、吴伟、赵嘉鸣、陈通、张为、陈金山、李政、华源、陈杰',gov:'龚正',govDep:'吴伟、陈杰、张小宏、卢山、解冬、张亚宏、陈宇剑、贺青',govSec:'马春雷',rd:'黄莉新',rdDep:'郑钢淼、周慧琳、蔡威、高小玫、肖贵玉、陈靖、莫负春',rdSec:'谢坚钢',cppcc:'胡文容',cppccDep:'张恩迪、李逸平、金兴明、黄震、虞丽娟、吴信宝、寿子琪、钱锋',cppccSec:'黄国平',cp:'16区',seat:'黄浦区'},
+'320000':{n:'江苏省',p:'8518万',a:'10.72万km2',g:'14.00万亿',sec:'信长星',secDep:'刘小涛、张忠',secComm:'周红波、刘建洋、储永宏、马欣、张国成、胡广杰、范波、徐缨、李耀光',gov:'刘小涛',govDep:'马欣、赵岩、陈忠伟、马士光、胡彬郴、沈剑荣',govSec:'赵建军',rd:'信长星',rdDep:'樊金龙、张爱军、储永宏、夏心旻、周广智、王学锋',rdSec:'陈建刚',cppcc:'张义珍',cppccDep:'杨岳、王荣平、阎立、周继业、姚晓东、王昊、马余强',cppccSec:'诸纪录',cp:'13地级市',seat:'南京市'},
+'330000':{n:'浙江省',p:'6630万',a:'10.55万km2',g:'9.45万亿',sec:'王浩',secDep:'刘捷、王成',secComm:'傅明先、徐文光、邱启文、王成国、刘非、杨荫凯、冯怡、张振丰、李岩益',gov:'刘捷',govDep:'徐文光、张雁云、胡伟、杨青玖、王钊、何中伟、姚高员',govSec:'徐大可',rd:'王浩',rdDep:'陈金彪、彭佳学、王成国、吴晶、刘忻、赵光君',rdSec:'鲁俊',cppcc:'廉毅敏',cppccDep:'王昌荣、陈小平、蔡秀军、成岳冲、陈擎苍、张学伟、叶正波、尹学群、高鹰忠',cppccSec:'陈东凌',cp:'11地级市',seat:'杭州市'},
+'340000':{n:'安徽省',p:'6070万',a:'14.01万km2',g:'5.06万亿',sec:'梁言顺',secDep:'王清宪、刘海泉',secComm:'孙红梅、王东伟、钱三雄、单向前、蔚盛斌、覃卫国',gov:'王清宪',govDep:'王东伟、张曙光、任清华、孙勇、李中、范付中、何淳宽',govSec:'潘朝晖',rd:'梁言顺',rdDep:'陶明伦、张韵声、何树山、王翠凤、刘明波、韩军、魏晓明',rdSec:'白金明',cppcc:'唐良智',cppccDep:'孙云飞、周喜安、郑宏、李和平、张祥根、陶仪声、马传喜、张西明、张永',cppccSec:'张韵波',cp:'16地级市',seat:'合肥市'},
+'350000':{n:'福建省',p:'4180万',a:'12.4万km2',g:'6.02万亿',sec:'周祖翼',secDep:'赵龙、郭宁宁',secComm:'张彦、崔永辉、吴偕林、宋鸿喜、石好勇、王永礼、苗延红、林涛',gov:'赵龙',govDep:'王永礼、李建成、林瑞良、王金福、江尔雄、赵增连、魏晓奎',govSec:'李斌',rd:'周祖翼',rdDep:'周联清、庄稼汉、李德金、檀云坤、袁毅、严可仕',rdSec:'黄新銮',cppcc:'滕佳材',cppccDep:'张兆民、王光远、阮诗玮、刘献祥、严可仕、余军、张国旺、黄玲',cppccSec:'陆开锦',cp:'9地级市',seat:'福州市'},
+'360000':{n:'江西省',p:'4500万',a:'16.69万km2',g:'3.42万亿',sec:'尹弘',secDep:'叶建春、陈永奇',secComm:'李伟、任珠峰、庄兆林、黄喜忠、时玉宝、陈敏、卢小青',gov:'叶建春',govDep:'任珠峰、孙洪山、袁勤华、夏文勇、史可、万广明、张莹',govSec:'李克坚',rd:'尹弘',rdDep:'胡世忠、张小平、王少玄、朱斌、张伟',rdSec:'杨文英',cppcc:'宋福龙',cppccDep:'陈俊卿、谢茹、尹建业、孙菊生、陈兴超、卢天锡、于秀明、辜清',cppccSec:'彭世东',cp:'11地级市',seat:'南昌市'},
+'370000':{n:'山东省',p:'10043万',a:'15.58万km2',g:'10.32万亿',sec:'林武',secDep:'周乃翔、徐海荣',secComm:'白玉刚、江成、王随莲、王良、赵豪志、宋军继、张海波、李猛、傅明先',gov:'周乃翔',govDep:'张海波、宋军继、孙继业、范波、陈平、王桂英、温暖、孙喜民',govSec:'宋军继（兼）',rd:'林武',rdDep:'徐海荣、白玉刚、江成、王随莲、王良、赵豪志、宋军继',rdSec:'张斌',cppcc:'葛慧君',cppccDep:'林峰海、程林、刘均刚、段青英、张新文、孙继业、宋永祥、田卫东',cppccSec:'秦传滨',cp:'16地级市',seat:'济南市'},
+'410000':{n:'河南省',p:'9785万',a:'16.7万km2',g:'6.66万亿',sec:'刘宁',secDep:'王凯、张巍',secComm:'安伟、秦国文、王刚、张雷明、赵钧、张敏、王崧、陈春江',gov:'王凯',govDep:'张敏、刘玉江、宋争辉、郑海洋、李酌、李涛、吕国范',govSec:'朱鸣',rd:'刘宁',rdDep:'李亚、孙守刚、江凌、陈星、何金平、刘南昌、张建慧、张弓',rdSec:'吉炳伟',cppcc:'孔昌生',cppccDep:'王战营、谢玉安、霍金花、张震宇、朱焕然、孙运锋、黄红霞',cppccSec:'汪中山',cp:'17地级市',seat:'郑州市'},
+'420000':{n:'湖北省',p:'5807万',a:'18.59万km2',g:'6.27万亿',sec:'王忠林',secDep:'李殿勋、诸葛宇杰',secComm:'侯淅珉、张文兵、宁咏、何良军、王林虎、琚朝晖、吴海涛、盛阅春、彭勇',gov:'李殿勋',govDep:'张文兵、陈平、黎东辉、胡亚波、徐文海、张文彤',govSec:'王太晖',rd:'王忠林',rdDep:'马国强、周洪宇、万勇、刘雪荣、刘晓鸣、胡志强、杨云彦',rdSec:'张爱国',cppcc:'孙伟',cppccDep:'李兵、张柏青、郭跃进、杨玉华、秦顺全、王红玲、王兴於、江利平',cppccSec:'涂远超',cp:'13地级市',seat:'武汉市'},
+'430000':{n:'湖南省',p:'6560万',a:'21.18万km2',g:'5.53万亿',sec:'沈晓明',secDep:'毛伟明、谢卫江',secComm:'吴桂英、隋忠诚、魏建锋、王道席、刘红兵、郭灵计、马永生',gov:'毛伟明',govDep:'王道席、王一鸥、蒋涤非、王俊寿、陈竞、余红胜',govSec:'瞿海',rd:'沈晓明',rdDep:'吴桂英、陈飞、胡旭晟、周农、彭国甫、陈文浩',rdSec:'王晓科',cppcc:'毛万春',cppccDep:'李建中、张健、李民、肖百灵、虢正贵、何寄华、肖祥清、潘碧灵',cppccSec:'邓群策',cp:'14地级市',seat:'长沙市'},
+'440000':{n:'广东省',p:'12780万',a:'17.97万km2',g:'14.58万亿',sec:'黄坤明',secDep:'孟凡利、马森述',secComm:'张虎、王曦、冯忠华、袁古洁、靳磊、张国智、胡劲军、张弓',gov:'孟凡利',govDep:'张虎、张国智、刘国周、王胜、李运、马正勇、唐屹峰',govSec:'陈敏',rd:'黄楚平',rdDep:'张硕辅、黄宁生、叶贞琴、陈如桂、张少康、吕业升、王波',rdSec:'许红',cppcc:'林克庆',cppccDep:'许瑞生、邓海光、袁宝成、王学成、黄武、张嘉极、李心、温国辉、郭永航、郑轲、郑振涛、陈文明',cppccSec:'吴伟鹏',cp:'21地级市',seat:'广州市'},
+'450000':{n:'广西',p:'5010万',a:'23.76万km2',g:'2.86万亿',sec:'陈刚',secDep:'韦韬、蔡允革',secComm:'卢新宁、何仁学、农生文、王维平、孙大光、周异决、王心富、刘宁、刘宏武',gov:'韦韬',govDep:'蔡允革、卢新宁、许显辉、眭国华、曹志强、胡帆、蓝晓',govSec:'钟得志',rd:'陈刚',rdDep:'方春明、张晓钦、卢献匾、杨静华、刘有明、周家斌',rdSec:'李东兴',cppcc:'孙大伟',cppccDep:'徐绍川、费志荣、黄俊华、钱学明、王乃学、何辛幸、巫家世、刘咏梅、彭健铭',cppccSec:'卢能干',cp:'14地级市',seat:'南宁市'},
+'460000':{n:'海南省',p:'1048万',a:'3.54万km2',g:'0.81万亿',sec:'冯飞',secDep:'刘小明、杨晋柏',secComm:'陈国猛、王斌、巴特尔、王培杰、王祺扬、纳云德、范少军、尹丽波、邹广',gov:'刘小明',govDep:'巴特尔、谢京、蔡朝晖、李锋、邹广、赵峰、杨国强',govSec:'蔡强',rd:'冯飞',rdDep:'李军、刘星泰、苻彩香、孙大海、闫希军、过建春',rdSec:'曹献坤',cppcc:'李荣灿',cppccDep:'肖莺子、李国梁、史贻云、蒙晓灵、侯茂丰、袁光平、骆清铭、刘艳玲',cppccSec:'罗时祥',cp:'4地级市',seat:'海口市'},
+'500000':{n:'重庆市',p:'3190万',a:'8.24万km2',g:'3.38万亿',sec:'袁家军',secDep:'陈新武、胡衡华',secComm:'宋依佳、姜辉、卢红、刘尚进、商奎、马震、王燕崎',gov:'胡衡华',govDep:'陈新武、马震、郑向东、姜国杰、徐建、黄茂军',govSec:'罗清泉',rd:'王炯',rdDep:'李明清、沈金强、屈谦、欧顺清、赵世庆、许洪斌',rdSec:'周少政',cppcc:'程丽华',cppccDep:'李静、陈贵云、谭家玲、周勇、丁时勇、杜惠平、王昱、但彦铮、罗清泉',cppccSec:'谢礼国',cp:'38区县',seat:'渝中区'},
+'510000':{n:'四川省',p:'8327万',a:'48.6万km2',g:'6.77万亿',sec:'王晓晖',secDep:'施小琳、于立军',secComm:'廖建宇、曹立军、董卫民、普布顿珠、郑莉、田庆盈、左永祥',gov:'施小琳',govDep:'董卫民、胡云、黄瑞雪、马正勇、徐芝文、任京东、张冬云',govSec:'胡元坤',rd:'王晓晖',rdDep:'王雁飞、罗强、祝春秀、彭琳、宋朝华、王菲、何延政',rdSec:'贾瑞云',cppcc:'田向利',cppccDep:'钟勉、杜和平、尧斯丹、林书成、欧阳泽华、刘成鸣、杨丹、谢商华、刘旭光',cppccSec:'李建勤',cp:'21地级市',seat:'成都市'},
+'520000':{n:'贵州省',p:'3850万',a:'17.62万km2',g:'2.27万亿',sec:'徐麟',secDep:'李炳军、马汉成',secComm:'李元平、卢雍政、胡忠雄、郭强、李睿、王雷、郭锡文、曲林',gov:'李炳军',govDep:'董家禄、蔡朝林、张敬平、罗强、杨同光、郭成林',govSec:'魏树旺',rd:'徐麟',rdDep:'陶长海、杨永英、李豫贵、王世杰、桑维亮、王忠',rdSec:'李三旗',cppcc:'赵永清',cppccDep:'赵德明、李汉宇、孙诚谊、张光奇、陈晏、唐德智、李建、孙发',cppccSec:'熊德威',cp:'9地级市',seat:'贵阳市'},
+'530000':{n:'云南省',p:'4700万',a:'39.41万km2',g:'3.15万亿',sec:'王宁',secDep:'王予波、刘洪建',secComm:'赵月霞、曾艳、赵俊民、郑仲全、杨斌、李保俊、胡大鹏、王正英',gov:'王予波',govDep:'赵俊民、王显刚、郭大进、杨洋、刘勇、徐浩、王学勤、李俊杰',govSec:'姜山',rd:'王宁',rdDep:'李小三、宗国英、王树芬、李文荣、徐彬、任军号、罗红江',rdSec:'韩梅',cppcc:'刘晓凯',cppccDep:'赵金、和良辉、高峰、杨嘉武、黄毅、徐彬、何波、童志云、李学林',cppccSec:'张荣明',cp:'16地级市',seat:'昆明市'},
+'540000':{n:'西藏',p:'376万',a:'122.84万km2',g:'0.28万亿',sec:'王君正',secDep:'严金海、嘎玛泽登、刘江',secComm:'任维、旦巴、姜文鹏、赖蛟、达娃次仁、斯朗尼玛、龚会才、袁红刚',gov:'嘎玛泽登',govDep:'任维（常务）、旦巴（常务）、甲热·洛桑丹增、罗梅、郎福宽、韦秀长、徐志涛、次仁平措、张利、赵鹏、朱守科、平措旦增',govSec:'李宏军',rd:'严金海',rdDep:'肖友才、许成仓、张洪波、刘柏呈、孙献忠',rdSec:'刘光旭',cppcc:'（暂缺）',cppccDep:'孟晓林、珠康·土登克珠、阿旺、白玛旺堆、俞允贵、王刚、达娃欧珠',cp:'7地级市',seat:'拉萨市'},
+'610000':{n:'陕西省',p:'3950万',a:'20.56万km2',g:'3.55万亿',sec:'赵一德',secDep:'赵刚、邢善萍',secComm:'王晓、王兴宁、孙大光、蒿慧杰、张伟、唐书海、王海鹏',gov:'赵刚',govDep:'王晓（常务）、徐明非、李钧、李九红、武文罡',govSec:'吕来升',rd:'赵一德',rdDep:'庄长兴、刘强、郭青、樊维斌、杨广亭',rdSec:'韩一兵',cppcc:'徐新荣',cppccDep:'李明远、杨冠军、张晓光、高岭',cp:'10地级市',seat:'西安市'},
+'620000':{n:'甘肃省',p:'2460万',a:'42.58万km2',g:'1.19万亿',sec:'胡昌升',secDep:'任振鹤、石谋军',secComm:'雷东生、程晓波、孙雪涛、刘长根、张永霞、张晓强、靳国卫、刘建伟、李刚',gov:'任振鹤',govDep:'程晓波（常务）、王钧、王兵、王旭、葛建团',govSec:'张伟文',rd:'胡昌升',rdDep:'嘉木样·洛桑久美·图丹却吉尼玛、胡焯、李沛兴、戴超、丁巨胜',rdSec:'刘永杰',cppcc:'庄国泰',cppccDep:'何伟、马文云、王锐、尚勋武、贠建民、霍卫平、刘仲奎、吴万华',cppccSec:'黄泽元',cp:'14地级市',seat:'兰州市'},
+'630000':{n:'青海省',p:'592万',a:'72.23万km2',g:'0.40万亿',sec:'吴晓军',secDep:'罗东川、刘奇凡',secComm:'刘美频、王卫东、张锦刚、才让太、王大南、乌拉孜别克·热苏力汗、班果、朱向峰、何录春、曹俊',gov:'罗东川',govDep:'张锦刚（常务）、才让太、刘涛、杨志文、刘超、李宏亚、王海红、程基伟',govSec:'苏全仁',rd:'吴晓军',rdDep:'杨逢春、刘同德、张黄元、王敬斋、蔡成勇',rdSec:'陈东昌',cppcc:'（待更新）',cppccDep:'（近期调整中）',cp:'8地级市',seat:'西宁市'},
+'640000':{n:'宁夏',p:'729万',a:'6.64万km2',g:'0.57万亿',sec:'李邑飞',secDep:'张雨浦、庄严',secComm:'艾俊涛、陈春平、买彦州、郭建军、赵旭辉、朱天舒、窦敬丽、白学贵',gov:'张雨浦',govDep:'陈春平（常务）、买彦州、王立、刘军、马宗保、褚伟、吴澜',govSec:'马金元',rd:'李邑飞',rdDep:'王和山、杨玉经、沈左权、马文娟、杜银杰',rdSec:'王文宇',cppcc:'陈雍',cppccDep:'王和山、洪洋、刘可为、马秀珍、郑震、许宁、马文娟、陆军、杨淑丽、李晓波',cppccSec:'曹志斌',cp:'5地级市',seat:'银川市'},
+'650000':{n:'新疆',p:'2600万',a:'166万km2',g:'2.17万亿',sec:'陈小江',secDep:'艾尔肯·吐尼亚孜、何忠友、陈明国、张柱',secComm:'田湘利、王建新、张迎春、玉苏甫江·麦麦提、伊力扎提·艾合买提江、哈丹·卡宾、王琳、王刚、杨诚',gov:'艾尔肯·吐尼亚孜',govDep:'张迎春、玉苏甫江·麦麦提、木合亚提·加尔木哈买提、薛斌、凯赛尔·阿不都克热木、朱立凡、潘曦、聂壮、克衣色尔·克尤木',govSec:'王岿然',rd:'祖木热提·吾布力',rdDep:'王明山、李宁平、迪力夏提·柯德尔汗、平新来、王国和、买买提明·卡德、艾尼瓦尔·吐尔逊、宋亚君',rdSec:'王江',cppcc:'努尔兰·阿不都满金',cppccDep:'彭家瑞、吉尔拉·衣沙木丁、孔星隆、窦万贵、邱树华、杨勇、阿不都热克甫·吐木尼牙孜、艾则孜·木沙、刘会军、刘见明、蒲雪梅、许咸宜、金之镇、艾尼玩·伊布拉音、王贵驷、库兰·赛富汗',cppccSec:'--',cp:'14地级市',seat:'乌鲁木齐市'},
+'710000':{n:'台湾省',p:'2341万',a:'3.6万km2',g:'--',cp:'--',seat:'--'},
+'810000':{n:'香港',p:'750万',a:'0.11万km2',g:'--',gov:'李家超',cp:'18区',seat:'中西区'},
+'820000':{n:'澳门',p:'70万',a:'33.3km2',g:'--',gov:'岑浩辉',cp:'7堂区',seat:'花地玛堂区'}
+};
+// ========== 市级数据（主要城市） ==========
+var C={
+'330100':{n:'杭州市',p:'1262万',a:'1.69万km2',g:'2.19万亿',sec:'刘非',gov:'杜旭亮（代）',rd:'李火林',cppcc:'马卫光',cp:'13区县',seat:'上城区'},
+'330200':{n:'宁波市',p:'977万',a:'0.98万km2',g:'1.82万亿',sec:'王成（兼）',gov:'汤飞帆',rd:'张平',cppcc:'陈龙',cp:'10区县',seat:'鄞州区'},
+'330300':{n:'温州市',p:'976万',a:'1.21万km2',g:'0.97万亿',sec:'张振丰',gov:'张文杰',rd:'葛益平',cppcc:'陈作荣',cp:'12区县',seat:'鹿城区'},
+'330400':{n:'嘉兴市',p:'558万',a:'0.39万km2',g:'0.78万亿',sec:'陈伟',gov:'许小月',rd:'高玲慧',cppcc:'陈利众',cp:'7区县',seat:'南湖区'},
+'330500':{n:'湖州市',p:'345万',a:'0.58万km2',g:'0.43万亿',sec:'陈浩',gov:'连坤明',rd:'孙贤龙',cppcc:'李上葵',cp:'5区县',seat:'吴兴区'},
+'330600':{n:'绍兴市',p:'537万',a:'0.83万km2',g:'0.84万亿',sec:'施惠芳',gov:'吴登芬',rd:'谭志桂',cppcc:'魏伟',cp:'6区县',seat:'越城区'},
+'330700':{n:'金华市',p:'716万',a:'1.09万km2',g:'0.67万亿',sec:'朱重烈',gov:'张健',rd:'陈玲玲',cppcc:'宋志恒',cp:'9区县',seat:'婺城区'},
+'330800':{n:'衢州市',p:'229万',a:'0.88万km2',g:'0.23万亿',sec:'高屹',gov:'徐张艳',rd:'吴国升',cppcc:'方健忠',cp:'6区县',seat:'柯城区'},
+'330900':{n:'舟山市',p:'118万',a:'2.22万km2',g:'0.23万亿',sec:'陈重',gov:'徐仁标',rd:'张明超',cppcc:'王伟',cp:'4区县',seat:'定海区'},
+'331000':{n:'台州市',p:'673万',a:'1.0万km2',g:'0.68万亿',sec:'沈铭权',gov:'王健',rd:'吴海平',cppcc:'叶海燕',cp:'9区县',seat:'椒江区'},
+'331100':{n:'丽水市',p:'252万',a:'1.73万km2',g:'0.21万亿',sec:'吴舜泽',gov:'朱林森',rd:'李锋',cppcc:'任淑女',cp:'9区县',seat:'莲都区'},
+'440100':{n:'广州市',p:'1898万',a:'0.74万km2',g:'3.12万亿',sec:'郭永航',gov:'孙志洋',rd:'王衍诗',cppcc:'李贻伟',cp:'11区',seat:'越秀区'},
+'440300':{n:'深圳市',p:'1790万',a:'0.20万km2',g:'3.68万亿',sec:'孟凡利（兼）',gov:'覃伟中',rd:'骆文智',cppcc:'林洁',cp:'9区',seat:'福田区'},
+'440400':{n:'珠海市',p:'252万',a:'0.17万km2',g:'0.44万亿',sec:'陈勇',gov:'黄志豪',rd:'潘江',cppcc:'王开洲',cp:'3区',seat:'香洲区'},
+'510100':{n:'成都市',p:'2147万',a:'1.43万km2',g:'2.35万亿',sec:'曹立军',gov:'王凤朝',rd:'包惠',cppcc:'张剡',cp:'20区县',seat:'高新区'},
+'420100':{n:'武汉市',p:'1380万',a:'0.85万km2',g:'2.12万亿',sec:'郭元强',gov:'盛阅春',rd:'胡立山',cppcc:'杨智',cp:'13区',seat:'江岸区'},
+'320100':{n:'南京市',p:'955万',a:'0.66万km2',g:'1.85万亿',sec:'周红波（兼）',gov:'李忠军',rd:'龙翔',cppcc:'王立平',cp:'11区',seat:'玄武区'},
+'430100':{n:'长沙市',p:'1052万',a:'1.18万km2',g:'1.60万亿',sec:'吴桂英',gov:'周海兵',rd:'文树勋',cppcc:'陈刚',cp:'9区县',seat:'岳麓区'},
+'370100':{n:'济南市',p:'945万',a:'1.02万km2',g:'1.36万亿',sec:'刘强',gov:'于海田',rd:'韩金峰',cppcc:'雷杰',cp:'12区县',seat:'历下区'},
+'370200':{n:'青岛市',p:'1035万',a:'1.13万km2',g:'1.67万亿',sec:'曾赞荣',gov:'赵豪志',rd:'王鲁明',cppcc:'孟庆斌',cp:'10区市',seat:'市南区'},
+'350100':{n:'福州市',p:'850万',a:'1.20万km2',g:'1.33万亿',sec:'郭宁宁',gov:'吴贤德',rd:'张忠',cppcc:'刘卓群',cp:'13区县',seat:'鼓楼区'},
+'350200':{n:'厦门市',p:'535万',a:'0.17万km2',g:'0.86万亿',sec:'崔永辉',gov:'伍斌',rd:'杨国豪',cppcc:'魏克良',cp:'6区',seat:'思明区'},
+'410100':{n:'郑州市',p:'1290万',a:'0.76万km2',g:'1.45万亿',sec:'安伟',gov:'何雄',rd:'周富强',cppcc:'杜新军',cp:'12区县',seat:'中原区'},
+'340100':{n:'合肥市',p:'970万',a:'1.14万km2',g:'1.35万亿',sec:'张红文',gov:'罗云峰',rd:'汪卫东',cppcc:'韩冰',cp:'9区县',seat:'蜀山区'},
+'210100':{n:'沈阳市',p:'920万',a:'1.29万km2',g:'0.90万亿',sec:'王新伟',gov:'吕志成',rd:'范继英',cppcc:'于学利',cp:'13区县',seat:'浑南区'},
+'230100':{n:'哈尔滨市',p:'990万',a:'5.31万km2',g:'0.60万亿',sec:'于洪涛',gov:'王合生',rd:'孙喆',cppcc:'孙珅',cp:'18区县',seat:'松北区'},
+'220100':{n:'长春市',p:'910万',a:'2.47万km2',g:'0.75万亿',sec:'张恩惠',gov:'王子联',rd:'王志厚',cppcc:'高志国',cp:'11区县',seat:'南关区'},
+'360100':{n:'南昌市',p:'660万',a:'0.72万km2',g:'0.82万亿',sec:'李红军',gov:'高世文',rd:'李镇发',cppcc:'卢伟平',cp:'9区县',seat:'红谷滩区'},
+'140100':{n:'太原市',p:'545万',a:'0.70万km2',g:'0.58万亿',sec:'韦韬',gov:'范兆森',rd:'魏民',cppcc:'操学诚',cp:'10区县',seat:'杏花岭区'},
+'130100':{n:'石家庄市',p:'1125万',a:'1.58万km2',g:'0.78万亿',sec:'张超超',gov:'马宇骏',rd:'李雪荣',cppcc:'张业',cp:'14区县',seat:'长安区'},
+'450100':{n:'南宁市',p:'895万',a:'2.21万km2',g:'0.59万亿',sec:'农生文',gov:'侯刚',rd:'冯学军',cppcc:'杨维超',cp:'12区县',seat:'青秀区'},
+'460100':{n:'海口市',p:'295万',a:'0.23万km2',g:'0.24万亿',sec:'范少军',gov:'丁晖',rd:'王艳萍',cppcc:'郭燕红',cp:'4区',seat:'秀英区'},
+'460200':{n:'三亚市',p:'110万',a:'0.19万km2',g:'0.10万亿',sec:'王祺扬',gov:'陈希',rd:'刘耿',cppcc:'林海宁',cp:'4区',seat:'吉阳区'},
+'620100':{n:'兰州市',p:'440万',a:'1.31万km2',g:'0.39万亿',sec:'张晓强',gov:'刘建勋',rd:'周学海',cppcc:'王宏',cp:'8区县',seat:'城关区'},
+'150100':{n:'呼和浩特市',p:'360万',a:'1.72万km2',g:'0.42万亿',sec:'包钢',gov:'贺海东',rd:'常培忠',cppcc:'李炯',cp:'9区县',seat:'新城区'},
+'630100':{n:'西宁市',p:'250万',a:'0.77万km2',g:'0.19万亿',sec:'王卫东',gov:'石建平',rd:'宋晨曦',cppcc:'段发达',cp:'7区县',seat:'城中区'},
+'640100':{n:'银川市',p:'293万',a:'0.90万km2',g:'0.30万亿',sec:'赵旭辉',gov:'陶少华',rd:'马和清',cppcc:'魏和清',cp:'6区县',seat:'金凤区'},
+'650100':{n:'乌鲁木齐市',p:'410万',a:'1.38万km2',g:'0.43万亿',sec:'张柱',gov:'牙合甫·排都拉',rd:'阿合买提江·阿合尼牙孜',cppcc:'高培香',cp:'8区县',seat:'水磨沟区'},
+'540100':{n:'拉萨市',p:'90万',a:'2.95万km2',g:'0.09万亿',sec:'肖友才',gov:'王强',rd:'贺鹏',cppcc:'江拥洛追',cp:'8区县',seat:'城关区'},
+'610100':{n:'西安市',p:'1320万',a:'1.01万km2',g:'1.33万亿',sec:'蒿慧杰（兼）',gov:'叶牛平',rd:'韩松',cppcc:'王吉德',cp:'13区县',seat:'未央区'},
+'610200':{n:'铜川市',p:'70万',a:'0.39万km2',g:'0.04万亿',sec:'郝光耀',gov:'刘丽',rd:'--',cppcc:'--',cp:'4区县',seat:'耀州区'},
+'610300':{n:'宝鸡市',p:'328万',a:'1.81万km2',g:'0.28万亿',sec:'陈晓勇',gov:'牛恺',rd:'--',cppcc:'--',cp:'13区县',seat:'金台区'},
+'610400':{n:'咸阳市',p:'396万',a:'1.03万km2',g:'0.29万亿',sec:'冷劲松',gov:'贾珉亮',rd:'--',cppcc:'--',cp:'14区县',seat:'秦都区'},
+'610500':{n:'渭南市',p:'469万',a:'1.30万km2',g:'0.22万亿',sec:'王浩',gov:'王心',rd:'--',cppcc:'--',cp:'11区县',seat:'临渭区'},
+'610600':{n:'延安市',p:'228万',a:'3.70万km2',g:'0.24万亿',sec:'王海鹏（兼）',gov:'郭柱国',rd:'--',cppcc:'--',cp:'13区县',seat:'宝塔区'},
+'610700':{n:'汉中市',p:'321万',a:'2.72万km2',g:'0.20万亿',sec:'张烨',gov:'王建平',rd:'--',cppcc:'--',cp:'11区县',seat:'汉台区'},
+'610800':{n:'榆林市',p:'362万',a:'4.29万km2',g:'0.75万亿',sec:'张胜利',gov:'马月逢',rd:'--',cppcc:'--',cp:'12区县',seat:'榆阳区'},
+'610900':{n:'安康市',p:'249万',a:'2.35万km2',g:'0.14万亿',sec:'柯昌万',gov:'张小平',rd:'--',cppcc:'--',cp:'10区县',seat:'汉滨区'},
+'611000':{n:'商洛市',p:'204万',a:'1.96万km2',g:'0.09万亿',sec:'周宇松',gov:'赵孝',rd:'--',cppcc:'--',cp:'7区县',seat:'商州区'}
+};
+var CY={};
+
+// ========== 数据加载（静态/API 双模式） ==========
+var apiBase = window.location.origin;
+var lastUpdateTime = null;
+
+async function loadApiData() {
+  // 先尝试API（本地开发用）
+  try {
+    var resp = await fetch(apiBase + '/api/all');
+    if (resp.ok) {
+      var json = await resp.json();
+      if (json.code === 0 && json.data) {
+        mergeData(json.data);
+        lastUpdateTime = json.data.lastUpdate;
+        console.log('✓ API数据已加载, 城市:', Object.keys(C).length);
+        return;
+      }
+    }
+  } catch (e) { console.log('API不可用，尝试静态JSON...'); }
+
+  // 回退：直接加载scraped_data.json（GitHub Pages用）
+  try {
+    var sresp = await fetch('./scraped_data.json');
+    if (sresp.ok) {
+      var sjson = await sresp.json();
+      mergeData(sjson);
+      lastUpdateTime = sjson.lastUpdate;
+      console.log('✓ 静态JSON已加载, 城市:', Object.keys(C).length);
+      return;
+    }
+  } catch (e) { console.log('静态JSON加载失败:', e.message); }
+}
+
+function mergeData(data) {
+  if (data.provinces) {
+    for (var k in data.provinces) {
+      if (data.provinces[k] && data.provinces[k].n) {
+        D[k] = Object.assign(D[k] || {}, data.provinces[k]);
+      }
+    }
+  }
+  if (data.cities) {
+    for (var k in data.cities) {
+      if (data.cities[k] && data.cities[k].n) {
+        C[k] = Object.assign(C[k] || {}, data.cities[k]);
+      }
+    }
+  }
+}
+
+var chart=null,chinaGeo=null;
+var currentZoom=1.0;
+var expandedProvinces={};
+var expandedCities={};
+var currentMode='province';
+var cityGeo=null;
+var selectedAdcode=null; // 当前选中的区域adcode
+
+function gd(a,t){return t==='province'?D[a]:(t==='city'||t==='county'?C[a]:CY[a]);}
+
+function bc(){
+  var html='';
+  if(lastUpdateTime){
+    var d=new Date(lastUpdateTime);
+    var timeStr=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes();
+    html+='<span class="bc-sep" style="font-size:11px;color:#8890a0">更新: '+timeStr+'</span>';
+  }
+  document.getElementById('breadcrumb').innerHTML=html;
+}
+
+function showDetail(a,n,t){
+  if(compareMode){addCompareItem(a,n,t);return;}
+  var d=gd(a,t);
+  var tl=t==='province'?'省级行政区':(t==='city'?'地级市':'区县级');
+  document.getElementById('rightPanelTitle').textContent=n;
+  document.getElementById('rightPanelBadge').textContent=tl;
+  var el=document.getElementById('rightPanelContent');
+  if(!d){el.innerHTML='<div class="detail-card"><div class="dc-title">'+n+'</div><div class="dc-row"><span class="dc-label">编码</span><span class="dc-value">'+a+'</span></div></div>';return;}
+  var h='<div class="detail-card"><div class="dc-title">'+d.n+'</div>';
+  if(d.p||d.a||d.g){h+='<div class="section-title">经济数据</div>';}
+  if(d.p)h+='<div class="dc-row"><span class="dc-label">人口</span><span class="dc-value">'+d.p+'</span></div>';
+  if(d.a)h+='<div class="dc-row"><span class="dc-label">面积</span><span class="dc-value">'+d.a+'</span></div>';
+  if(d.g)h+='<div class="dc-row"><span class="dc-label">GDP</span><span class="dc-value">'+d.g+'</span></div>';
+  if(d.sec||d.secDep||d.secComm){h+='<div class="section-title">党委</div>';}
+  if(d.sec)h+='<div class="dc-row"><span class="dc-label">书记</span><span class="dc-value">'+d.sec+'</span></div>';
+  if(d.secDep)h+='<div class="dc-row"><span class="dc-label">副书记</span><span class="dc-value">'+d.secDep+'</span></div>';
+  if(d.secComm)h+='<div class="dc-row" style="flex-wrap:wrap"><span class="dc-label">常委</span><span class="dc-value" style="max-width:65%;text-align:right;word-break:break-all">'+d.secComm+'</span></div>';
+  if(d.gov||d.govDep||d.govSec){h+='<div class="section-title">政府</div>';}
+  if(d.gov)h+='<div class="dc-row"><span class="dc-label">首长</span><span class="dc-value">'+d.gov+'</span></div>';
+  if(d.govDep)h+='<div class="dc-row" style="flex-wrap:wrap"><span class="dc-label">副职</span><span class="dc-value" style="max-width:65%;text-align:right;word-break:break-all">'+d.govDep+'</span></div>';
+  if(d.govSec)h+='<div class="dc-row"><span class="dc-label">秘书长</span><span class="dc-value">'+d.govSec+'</span></div>';
+  if(d.rd||d.rdDep){h+='<div class="section-title">人大</div>';}
+  if(d.rd)h+='<div class="dc-row"><span class="dc-label">主任</span><span class="dc-value">'+d.rd+'</span></div>';
+  if(d.rdDep)h+='<div class="dc-row" style="flex-wrap:wrap"><span class="dc-label">副主任</span><span class="dc-value" style="max-width:65%;text-align:right;word-break:break-all">'+d.rdDep+'</span></div>';
+  if(d.rdSec)h+='<div class="dc-row"><span class="dc-label">秘书长</span><span class="dc-value">'+d.rdSec+'</span></div>';
+  if(d.cppcc||d.cppccDep){h+='<div class="section-title">政协</div>';}
+  if(d.cppcc)h+='<div class="dc-row"><span class="dc-label">主席</span><span class="dc-value">'+d.cppcc+'</span></div>';
+  if(d.cppccDep)h+='<div class="dc-row" style="flex-wrap:wrap"><span class="dc-label">副主席</span><span class="dc-value" style="max-width:65%;text-align:right;word-break:break-all">'+d.cppccDep+'</span></div>';
+  if(d.cppccSec)h+='<div class="dc-row"><span class="dc-label">秘书长</span><span class="dc-value">'+d.cppccSec+'</span></div>';
+  if(d.cp||d.seat){h+='<div class="section-title">区划</div>';}
+  if(d.cp)h+='<div class="dc-row"><span class="dc-label">行政区划</span><span class="dc-value">'+d.cp+'</span></div>';
+  if(d.seat)h+='<div class="dc-row"><span class="dc-label">政府驻地</span><span class="dc-value">'+d.seat+'</span></div>';
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+// ========== 地图渲染 ==========
+function setMapMode(mode){
+  currentMode=mode;
+  // 更新按钮样式
+  document.getElementById('modeProvince').style.fontWeight=mode==='province'?'600':'normal';
+  document.getElementById('modeCity').style.fontWeight=mode==='city'?'600':'normal';
+  expandedProvinces={};
+  expandedCities={};
+  if(mode==='province'){
+    if(chinaGeo)renderAll();
+  }else if(mode==='city'){
+    if(cityGeo){renderAll();return;}
+    fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full_city.json').then(function(r){
+      if(!r.ok)throw Error('');
+      return r.json();
+    }).then(function(gd){
+      cityGeo=gd;
+      renderAll();
+    }).catch(function(){
+      // 降级：遍历所有省份加载市级数据
+      loadAllCitiesGeo();
+    });
+  }
+}
+
+function loadAllCitiesGeo(){
+  if(!chinaGeo)return;
+  document.getElementById('rightPanelContent').innerHTML='<div class="empty-state"><p>正在加载全国市级数据...</p></div>';
+  var muniAdcodes={'110000':1,'120000':1,'310000':1,'500000':1};
+  var muniFeats=[],loadAdcodes=[];
+  // 提取直辖市省级轮廓 + 其他省 adcode
+  for(var i=0;i<chinaGeo.features.length;i++){
+    var f=chinaGeo.features[i];
+    var a=String(f.properties.adcode||f.properties.id||'');
+    var aname=f.properties.name||'';
+    // 也按名称匹配兜底
+    if((a==='110000'||a==='120000'||a==='310000'||a==='500000')||
+       aname==='北京市'||aname==='天津市'||aname==='上海市'||aname==='重庆市'){
+      muniFeats.push(f);
+    }else if(a&&a.length===6&&a.substring(2)==='0000'){
+      loadAdcodes.push(a);
+    }
+  }
+  var allFeats=[],done=0,total=loadAdcodes.length;
+  function loadNext(idx){
+    if(idx>=total){
+      var finalFeats=muniFeats.slice().concat(allFeats);
+      cityGeo={type:'FeatureCollection',features:finalFeats};
+      renderAll();
+      return;
+    }
+    fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+loadAdcodes[idx]+'_full.json').then(function(r){
+      if(r.ok)return r.json();
+      return null;
+    }).then(function(gd){
+      if(gd&&gd.features)allFeats=allFeats.concat(gd.features);
+      done++;
+      if(done%5===0||done===total){
+        document.getElementById('rightPanelContent').innerHTML='<div class="empty-state"><p>加载市级数据 '+done+'/'+total+'...</p></div>';
+      }
+      loadNext(idx+1);
+    }).catch(function(){
+      done++;
+      loadNext(idx+1);
+    });
+  }
+  if(total>0)loadNext(0);
+  else{var finalFeats=muniFeats.slice();cityGeo={type:'FeatureCollection',features:finalFeats};renderAll();}
+}
+
+
+
+function buildFeatures(){
+  var src=currentMode==='city'&&cityGeo?cityGeo:chinaGeo;
+  if(!src)return [];
+  var feats=[];
+  for(var i=0;i<src.features.length;i++)feats.push(src.features[i]);
+  for(var prov in expandedProvinces){
+    var cfs=expandedProvinces[prov];
+    if(cfs&&cfs.length>0){
+      // 不替换省级轮廓，追加市级features
+      for(var j=0;j<cfs.length;j++)feats.push(cfs[j]);
+    }
+  }
+  for(var city in expandedCities){
+    var cdfs=expandedCities[city];
+    if(cdfs&&cdfs.length>0){
+      // 不替换原始城市feature，只追加区县features（城市轮廓保留，区县叠加）
+      for(var k=0;k<cdfs.length;k++)feats.push(cdfs[k]);
+    }
+  }
+  return feats;
+}
+
+function expandProvince(pa){
+  if(expandedProvinces[pa])return Promise.resolve(expandedProvinces[pa]);
+  return fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+pa+'_full.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){expandedProvinces[pa]=gd.features||[];return expandedProvinces[pa];}).catch(function(){return null;});
+}
+
+function expandCity(ca){
+  if(expandedCities[ca])return Promise.resolve(expandedCities[ca]);
+  return fetch('https://geo.datav.aliyun.com/areas_v3/bound/'+ca+'_full.json').then(function(r){if(!r.ok)throw Error('');return r.json();}).then(function(gd){expandedCities[ca]=gd.features||[];return expandedCities[ca];}).catch(function(){return null;});
+}
+
+function renderAll(){
+  if(!chart){chart=echarts.init(document.getElementById('map'));window.addEventListener('resize',function(){if(chart)chart.resize();});}
+  var geoData=currentMode==='city'&&cityGeo?cityGeo:chinaGeo;
+
+  // 即使没有GeoJSON，也渲染左侧列表 + 右侧详情
+  if(!geoData){
+    renderSidebar();
+    return;
+  }
+  var feats=buildFeatures();
+  var md={type:'FeatureCollection',features:feats};
+  try{echarts.registerMap('m',md);}catch(e){}
+  var regions=feats.map(function(f){var p=f.properties||{};return{a:String(p.adcode||p.id||''),n:p.name||''};}).filter(function(r){return r.n;});
+  var expandedKeys={};
+  for(var p in expandedProvinces){expandedKeys[p]=1;expandedProvinces[p].forEach(function(f){expandedKeys[String(f.properties.adcode||f.properties.id||'')]=1;});}
+  for(var c in expandedCities){expandedKeys[c]=1;expandedCities[c].forEach(function(f){expandedKeys[String(f.properties.adcode||f.properties.id||'')]=1;});}
+  var data=regions.map(function(r){
+    var isExp=!!expandedKeys[r.a];
+    var pv=r.a.substring(2)==='0000',ct=(!pv&&r.a.substring(4)==='00');
+    var bc,bw;
+    var isDark=document.body.classList.contains('dark');
+    var expColor=isDark?'#ff6b35':'#e74c3c';
+    var ctColor=isDark?'#ffd700':'#e67e22';
+    // 选中的区域用展开色突出 + 浅色填充
+    var isSelected=(r.a===selectedAdcode);
+    if(isSelected){
+      var fillColor=isDark?'rgba(255,80,80,0.2)':'rgba(231,76,60,0.15)';
+      bc=pv?expColor:ctColor;bw=3.0;
+      return {name:r.n,adcode:r.a,itemStyle:{areaColor:fillColor,borderColor:bc,borderWidth:bw}};
+    }
+    if(isExp){
+      bc=pv?expColor:ctColor;
+      bw=pv?2.2:1.8;
+      // 被展开的省级/市级名称隐藏
+      if((pv&&expandedProvinces[r.a])||(ct&&expandedCities[r.a])){
+        return {name:r.n,adcode:r.a,itemStyle:{borderColor:bc,borderWidth:bw},label:{show:true,fontSize:0,color:'transparent'}};
+      }
+    }else{
+      if(pv){bc='rgba(44,62,80,0.55)';bw=2.0;}
+      else if(ct){bc='rgba(52,73,94,0.4)';bw=1.5;}
+      else{bc='rgba(60,80,120,0.25)';bw=0.8;}
+    }
+    return {name:r.n,adcode:r.a,itemStyle:{borderColor:bc,borderWidth:bw}};
+  });
+  try{echarts.registerMap('m',{type:'FeatureCollection',features:feats});}catch(e){}
+  // 读取当前用户视角
+  var curCenter=null;var curZoom=null;
+  try{var opt=chart.getOption();if(opt&&opt.series&&opt.series[0]){if(opt.series[0].zoom!=null)curZoom=opt.series[0].zoom;if(opt.series[0].center)curCenter=opt.series[0].center;}}catch(e){}
+  var isDark=document.body.classList.contains('dark');
+  var bgColor=isDark?'#0d1117':'#ADD8E6';
+  var areaColor=isDark?'#2d333b':'#ADD8E6';
+  var areaEmphasis=isDark?'#444c56':'#87CEEB';
+  var borderColor=isDark?'rgba(139,148,158,0.6)':'rgba(44,62,80,0.5)';
+  var emphasisBorder=isDark?'#58a6ff':'#4a5070';
+  var labelColor=isDark?'#c9d1d9':'#1a1a2e';
+  chart.setOption({
+    backgroundColor:bgColor,
+    tooltip:{trigger:'item',backgroundColor:isDark?'rgba(22,27,34,0.96)':'rgba(255,255,255,0.96)',borderColor:isDark?'#30363d':'#c8cce0',borderWidth:1,textStyle:{color:isDark?'#c9d1d9':'#1a1a2e',fontSize:13},formatter:function(p){if(!p.data)return'';return'<b>'+p.name+'</b>';}},
+
+    series:[{type:'map',map:'m',roam:true,center:curCenter||[104,35],zoom:curZoom||4,selectedMode:false,
+      label:{show:showLabels,color:labelColor,fontSize:Math.max(6,Math.round(7+currentZoom*0.8)),fontWeight:'normal',fontFamily:'SimSun,"宋体",serif',formatter:function(p){return p.name;}},
+      itemStyle:{areaColor:areaColor,borderColor:borderColor,borderWidth:1.2},
+      emphasis:{label:{color:labelColor,fontWeight:'bold',fontSize:Math.max(8,Math.round(9+currentZoom*0.8))},itemStyle:{areaColor:areaEmphasis,borderColor:emphasisBorder,borderWidth:2}},
+      data:data,animationDuration:0
+    }]
+  },true);
+  chart.off('click');
+  chart.on('click',function(p){if(!p.data||!p.data.adcode)return;console.log('click adcode:',p.data.adcode);handleClick(String(p.data.adcode),p.name);});
+  bc();
+  renderSidebar();
+}
+
+function renderSidebar(){
+  var src=currentMode==='city'&&cityGeo?cityGeo:chinaGeo;
+  var modeLabels={'province':'省级','city':'地级市'};
+  var allP=[];
+  if(src){
+    for(var i=0;i<src.features.length;i++){var pf=src.features[i],pa=String(pf.properties.adcode||pf.properties.id||''),pn=pf.properties.name||'';if(pn)allP.push({a:pa,n:pn});}
+  }
+  // 城市模式：从API数据补充GeoJSON中没有的城市
+  if(currentMode==='city'){
+    var seen={};
+    for(var i=0;i<allP.length;i++)seen[allP[i].a]=1;
+    for(var k in C){
+      if(!seen[k]&&C[k]&&C[k].n){
+        allP.push({a:k,n:C[k].n});
+      }
+    }
+  }
+  document.getElementById('leftPanelTitle').textContent=modeLabels[currentMode]+'列表';
+  document.getElementById('leftPanelBadge').textContent=modeLabels[currentMode];
+  var ph='<div class="list-title">所有'+(currentMode==='province'?'省份':'城市')+' <span>('+allP.length+')</span></div>';
+  for(var i=0;i<allP.length;i++){var pv=allP[i],dd=D[pv.a]||C[pv.a],sub='';if(dd){var parts=[];if(dd.p)parts.push('人口 '+dd.p);if(dd.a)parts.push('面积 '+dd.a);if(!parts.length&&dd.sec)parts.push('书记 '+dd.sec);if(!parts.length&&dd.gov)parts.push('市长 '+dd.gov);sub=parts.join(' / ');}var ie=!!expandedProvinces[pv.a];var iec=!!expandedCities[pv.a];ph+='<div class="area-item'+(ie||iec?' expanded':'')+'" onclick="handleClick(\''+pv.a+'\',\''+pv.n+'\')" style="'+(ie||iec?'border-color:#4a5070;background:#f0f2f6;':'')+'"><div class="ai-name">'+(ie||iec?'&#9660; ':'&#9654; ')+pv.n+'</div>'+(sub?'<div class="ai-sub">'+sub+'</div>':'')+'</div>';
+    // 如果该省份已展开，列出下辖市
+    if(ie&&expandedProvinces[pv.a]){
+      var cfs=expandedProvinces[pv.a];
+      for(var ci=0;ci<cfs.length;ci++){
+        var cf=cfs[ci],ca2=String(cf.properties.adcode||cf.properties.id||''),cn2=cf.properties.name||'';
+        if(cn2&&ca2!==pv.a){var dd2=C[ca2],sub2='';if(dd2)sub2='人口 '+dd2.p+' / 面积 '+dd2.a;ph+='<div class="area-item" style="padding:8px 14px 8px 28px;border-color:transparent;margin-bottom:2px" onclick="handleClick(\''+ca2+'\',\''+cn2+'\')"><div class="ai-name" style="font-size:13px">'+cn2+'</div>'+(sub2?'<div class="ai-sub" style="font-size:11px">'+sub2+'</div>':'')+'</div>';}
+      }
+    }
+    // 如果该城市已展开，列出下辖区县
+    if(iec&&expandedCities[pv.a]){
+      var cdfs=expandedCities[pv.a];
+      for(var ci2=0;ci2<cdfs.length;ci2++){
+        var cdf=cdfs[ci2],ca3=String(cdf.properties.adcode||cdf.properties.id||''),cn3=cdf.properties.name||'';
+        if(cn3&&ca3!==pv.a){ph+='<div class="area-item" style="padding:8px 14px 8px 28px;border-color:transparent;margin-bottom:2px" onclick="handleClick(\''+ca3+'\',\''+cn3+'\')"><div class="ai-name" style="font-size:13px">'+cn3+'</div></div>';}
+      }
+    }
+  }
+  document.getElementById('leftPanelContent').innerHTML=ph;
+  cachedListHtml=ph;
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchInput').placeholder=currentMode==='province'?'搜索省份...':'搜索城市...';
+}
+
+function toggleProvince(a,n){
+  var pa=a.substring(0,2)+'0000';
+  showDetail(a,n,'province');
+  // 直辖市不展开，但需要清理其他展开省份
+  var muni={'110000':1,'120000':1,'310000':1,'500000':1};
+  if(muni[pa]){
+    for(var p in expandedProvinces){delete expandedProvinces[p];}
+    for(var c in expandedCities){delete expandedCities[c];}
+    renderAll();
+    return;
+  }
+  if(expandedProvinces[pa]){
+    delete expandedProvinces[pa];
+    for(var c in expandedCities){if(c.substring(0,2)===pa.substring(0,2))delete expandedCities[c];}
+    renderAll();
+    return;
+  }
+  // 清除其他展开的省份
+  for(var p in expandedProvinces){delete expandedProvinces[p];}
+  for(var c in expandedCities){delete expandedCities[c];}
+  expandProvince(pa).then(function(){renderAll();});
+}
+
+function handleClick(ca,cn){
+  var ip=(ca.substring(2)==='0000'),pa=ca.substring(0,2)+'0000';
+  if(currentMode==='province'){
+    console.log('省级点击:',ca,cn,'ip:',ip);
+    selectedAdcode=ca;
+    if(ip){
+      toggleProvince(ca,cn);
+    }else{
+      showDetail(ca,cn,'city');
+      renderAll();
+    }
+    return;
+  }
+  // 市级模式
+  if(currentMode==='city'){
+    selectedAdcode=ca;
+    var muni={'110000':1,'120000':1,'310000':1,'500000':1};
+    var isCity=(ca.substring(2)!=='00'&&ca.substring(4)==='00');
+    var isMuni=!!muni[ca];
+    if(isCity||isMuni){
+      showDetail(ca,cn,'city');
+      if(expandedCities[ca]){
+        delete expandedCities[ca];renderAll();
+      }else{
+        for(var cc in expandedCities){delete expandedCities[cc];}
+        expandCity(ca).then(function(){renderAll();});
+      }
+      return;
+    }
+    // 点击区县：只选中，不展开
+    showDetail(ca,cn,'city');
+    renderAll();
+    return;
+  }
+}
+
+async function toHome(){
+  // 先加载API数据
+  await loadApiData();
+  try{
+    var r=await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json');
+    if(!r.ok)throw Error('');
+    chinaGeo=await r.json();
+    currentZoom=1.0;
+    currentMode='province';
+    document.getElementById('modeProvince').style.fontWeight='600';
+    renderAll();
+  }catch(e){
+    console.log('GeoJSON加载失败，显示数据列表模式');
+    // 直接用API数据显示城市列表
+    currentMode='city';
+    document.getElementById('modeCity').style.fontWeight='600';
+    document.getElementById('modeProvince').style.fontWeight='normal';
+    cityGeo=null;
+    renderAll();
+  }
+}
+document.addEventListener('DOMContentLoaded',function(){document.body.classList.add('dark');document.getElementById('darkToggle').textContent='☀️ 亮色';toHome();});
+
+var showLabels=true;
+var cachedListHtml='';
+var compareMode=false;
+var compareItems=[];
+var compareChart=null;
+function toggleHistory(){
+  var el=document.getElementById('rightPanelContent');
+  document.getElementById('rightPanelTitle').textContent='更新记录';
+  document.getElementById('rightPanelBadge').textContent='--';
+  el.innerHTML='<div class="empty-state"><p>正在加载...</p></div>';
+  fetch(apiBase+'/api/history').then(function(r){return r.json();}).then(function(json){
+    if(json.code!==0||!json.data||json.data.length===0){
+      el.innerHTML='<div class="empty-state"><p>暂无更新记录</p></div>';return;
+    }
+    var html='';
+    for(var i=0;i<json.data.length;i++){
+      var h=json.data[i];
+      var typeClass='hi-info';
+      if(h.type.indexOf('success')>=0)typeClass='hi-success';
+      else if(h.type.indexOf('error')>=0||h.type.indexOf('fail')>=0)typeClass='hi-error';
+      else if(h.type.indexOf('start')>=0)typeClass='hi-start';
+      var d=new Date(h.time);
+      var ts=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds();
+      var typeLabel=h.type.replace('scrape_','').replace('auto_','自动').replace('server_','系统');
+      html+='<div class="history-item"><span class="hi-type '+typeClass+'">'+typeLabel+'</span><span class="hi-time">'+ts+'</span><div class="hi-detail">'+(h.details||'')+'</div>';
+      // 显示来源网址
+      if(h.source && h.source.length>0){
+        for(var si=0;si<h.source.length;si++){
+          var src=h.source[si];
+          if(typeof src==='string')html+='<div class="hi-detail" style="font-size:11px;color:#4a90d9;word-break:break-all">📎 '+src+'</div>';
+          else if(src.url)html+='<div class="hi-detail" style="font-size:11px;color:#4a90d9;word-break:break-all">📎 <a href="'+src.url+'" target="_blank" style="color:#4a90d9">'+src.name+'</a></div>';
+        }
+      }
+      // 显示更新结果列表
+      if(h.results && h.results.length>0){
+        html+='<div style="margin-top:4px;max-height:100px;overflow-y:auto;font-size:11px">';
+        var maxShow=Math.min(h.results.length,30);
+        for(var ri=0;ri<maxShow;ri++){
+          var r=h.results[ri];
+          var detailStr='· '+r.type+' '+r.name;
+          if(r.sec)detailStr+=', 书记='+r.sec;
+          if(r.gov)detailStr+=', 首长='+r.gov;
+          if(r.rd)detailStr+=', 主任='+r.rd;
+          if(r.cppcc)detailStr+=', 主席='+r.cppcc;
+          if(r.rdDep)detailStr+=', 副主任='+r.rdDep;
+          if(r.cppccDep)detailStr+=', 副主席='+r.cppccDep;
+          html+='<div style="padding:1px 0;color:#4a5070">'+detailStr+'</div>';
+        }
+        if(h.results.length>maxShow)html+='<div style="color:#8890a0">...还有'+(h.results.length-maxShow)+'条</div>';
+        html+='</div>';
+      }
+      html+='</div>';
+    }
+    el.innerHTML=html;
+  }).catch(function(){
+    el.innerHTML='<div class="empty-state"><p>加载失败</p></div>';
+  });
+}
+
+function toggleCompare(){
+  compareMode=!compareMode;
+  var btn=document.getElementById('compareToggle');
+  btn.textContent=compareMode?'📊 退出对比':'📊 对比';
+  compareItems=[];
+  if(compareChart){
+    if(Array.isArray(compareChart))compareChart.forEach(function(c){c.dispose();});
+    else compareChart.dispose();
+    compareChart=null;
+  }
+  document.getElementById('rightPanelTitle').textContent='对比模式';
+  document.getElementById('rightPanelBadge').textContent='--';
+  document.getElementById('rightPanelContent').innerHTML=compareMode?'<div class="compare-hint">点击两个省份/城市进行对比</div>':'<div class="empty-state"><p>点击地图上的区域查看详情</p></div>';
+}
+function resetCompare(){
+  compareItems=[];
+  if(compareChart){
+    if(Array.isArray(compareChart))compareChart.forEach(function(c){c.dispose();});
+    else compareChart.dispose();
+    compareChart=null;
+  }
+  renderCompare();
+}
+function addCompareItem(a,n,t){
+  if(!compareMode)return;
+  var d=gd(a,t);
+  if(!d)d={n:n,p:'--',a:'--',g:'--'};
+  compareItems.push({a:a,n:n,t:t,d:d});
+  if(compareItems.length>2)compareItems.shift();
+  renderCompare();
+}
+function renderCompare(){
+  var el=document.getElementById('rightPanelContent');
+  if(compareItems.length===0){el.innerHTML='<div class="compare-hint">点击两个省份/城市进行对比</div>';if(compareChart){if(Array.isArray(compareChart))compareChart.forEach(function(c){c.dispose();});else compareChart.dispose();compareChart=null;}return;}
+  if(compareItems.length===1){
+    var d=compareItems[0].d;
+    el.innerHTML='<div style="padding:12px"><div style="text-align:center;font-size:16px;font-weight:600;margin-bottom:16px;color:'+(document.body.classList.contains('dark')?'#c9d1d9':'#1a1a2e')+'">'+d.n+'</div><div style="text-align:center"><button class="bc-btn" onclick="resetCompare()" style="margin:0 auto">🔄 重置</button></div><div class="compare-hint">请再点击另一个省份/城市</div></div>';
+    if(compareChart){if(Array.isArray(compareChart))compareChart.forEach(function(c){c.dispose();});else compareChart.dispose();compareChart=null;}
+    return;
+  }
+  var d1=compareItems[0].d,d2=compareItems[1].d;
+  var isDark=document.body.classList.contains('dark');
+  var textColor=isDark?'#c9d1d9':'#1a1a2e';
+  var barColor1=isDark?'#58a6ff':'#5470c6';
+  var barColor2=isDark?'#ff6b35':'#ee6666';
+  // 解析数值用于柱状图
+  function parseVal(v){
+    if(!v||v==='--')return 0;
+    var s=v.replace(/[万亿km2万,]/g,'');
+    var n=parseFloat(s);
+    if(v.indexOf('万')>-1&&v.indexOf('km2')===-1&&v.indexOf('万亿')===-1)n=n*10000;
+    if(v.indexOf('万亿')>-1)n=n*10000;
+    if(v.indexOf('亿')>-1&&v.indexOf('万亿')===-1)n=n*100000000;
+    return n||0;
+  }
+  var pop1=parseVal(d1.p),pop2=parseVal(d2.p);
+  var area1=parseVal(d1.a),area2=parseVal(d2.a);
+  var gdp1=parseVal(d1.g),gdp2=parseVal(d2.g);
+  el.innerHTML='<div id="comparePop" style="width:100%;height:140px"></div><div id="compareArea" style="width:100%;height:140px"></div><div id="compareGdp" style="width:100%;height:140px"></div><div style="text-align:center;padding:8px"><button class="bc-btn" onclick="resetCompare()">🔄 重置</button></div>';
+  if(compareChart)compareChart.dispose();
+  compareChart=[];
+  function makeChart(id,title,unit,v1,v2){
+    var c=echarts.init(document.getElementById(id));
+    c.setOption({
+      tooltip:{trigger:'item',formatter:function(p){return p.name+'<br/>'+p.seriesName+': '+p.value+' '+unit;}},
+      grid:{left:50,right:10,top:30,bottom:25},
+      xAxis:{type:'category',data:[d1.n,d2.n],axisLabel:{color:textColor,fontSize:10},name:unit,nameTextStyle:{color:textColor,fontSize:9}},
+      yAxis:{type:'value',axisLabel:{color:textColor,fontSize:9,formatter:function(v){return v>=10000?(v/10000).toFixed(1)+'万':v;}}},
+      title:{text:title,textStyle:{color:textColor,fontSize:12},left:'center',top:0},
+      series:[{type:'bar',data:[{value:v1,itemStyle:{color:barColor1}},{value:v2,itemStyle:{color:barColor2}}],barWidth:20}]
+    });
+    compareChart.push(c);
+  }
+  makeChart('comparePop','人口','万人',pop1,pop2);
+  makeChart('compareArea','面积','km²',area1,area2);
+  makeChart('compareGdp','GDP','亿元',gdp1,gdp2);
+}
+function searchList(val){
+  var el=document.getElementById('leftPanelContent');
+  if(!val){el.innerHTML=cachedListHtml;return;}
+  var items=el.querySelectorAll('.area-item');
+  var kw=val.trim().toLowerCase();
+  for(var i=0;i<items.length;i++){
+    var txt=items[i].textContent.toLowerCase();
+    items[i].style.display=txt.indexOf(kw)>-1?'':'none';
+  }
+}
+function toggleLabels(){
+  showLabels=!showLabels;
+  var btn=document.getElementById('labelToggle');
+  btn.textContent=showLabels?'🏷️ 地名':'🏷️ 隐藏';
+  if(chart){renderAll();}
+}
+function toggleDark(){
+  var b=document.body;
+  b.classList.toggle('dark');
+  var btn=document.getElementById('darkToggle');
+  btn.textContent=b.classList.contains('dark')?'☀️ 亮色':'🌙 暗色';
+  if(chart){renderAll();}
+}
+</script>
+</body>
+</html>

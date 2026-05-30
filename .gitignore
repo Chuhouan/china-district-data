@@ -1,0 +1,12 @@
+node_modules/
+backups/
+*.png
+update_history.json
+data_gaps.json
+地级市领导表.txt
+parse_leaders.js
+test_*.js
+debug*.js
+analyze_*.js
+verify.js
+fix.js
