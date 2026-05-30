@@ -496,7 +496,7 @@ function loadCountiesFromLocal(ca){
     return Promise.resolve(filterCounties(ca));
   }
   console.log('正在加载本地区县数据 china_counties.json (13.8MB)...');
-  return fetch('./china_counties.json').then(function(r){if(!r.ok)throw Error('HTTP '+r.status);return r.json();}).then(function(gd){
+  return fetch('./china_counties.json?v=2').then(function(r){if(!r.ok)throw Error('HTTP '+r.status);return r.json();}).then(function(gd){
     window._counties=gd;
     console.log('✓ 本地区县数据已加载, 总区县数:'+gd.features.length);
     return filterCounties(ca);
