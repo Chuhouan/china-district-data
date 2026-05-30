@@ -369,15 +369,24 @@ function setMapMode(mode){
     if(chinaGeo)renderAll();
   }else if(mode==='city'){
     if(cityGeo){renderAll();return;}
-    fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full_city.json').then(function(r){
+    fetch('./china_cities.json').then(function(r){
       if(!r.ok)throw Error('');
       return r.json();
     }).then(function(gd){
       cityGeo=gd;
       renderAll();
     }).catch(function(){
-      // 降级：遍历所有省份加载市级数据
-      loadAllCitiesGeo();
+      // 降级：尝试阿里云API
+      fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full_city.json').then(function(r2){
+        if(!r2.ok)throw Error('');
+        return r2.json();
+      }).then(function(gd2){
+        cityGeo=gd2;
+        renderAll();
+      }).catch(function(){
+        // 二次降级：遍历所有省份加载市级数据
+        loadAllCitiesGeo();
+      });
     });
   }
 }
@@ -641,19 +650,31 @@ async function toHome(){
   // 先加载API数据
   await loadApiData();
   try{
-    var r=await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json');
+    var r=await fetch('./china_provinces.json');
     if(!r.ok)throw Error('');
     chinaGeo=await r.json();
     currentZoom=1.0;
     currentMode='province';
     document.getElementById('modeProvince').style.fontWeight='600';
   }catch(e){
-    console.log('GeoJSON加载失败，显示数据列表模式');
-    // 直接用API数据显示城市列表
-    currentMode='city';
-    document.getElementById('modeCity').style.fontWeight='600';
-    document.getElementById('modeProvince').style.fontWeight='normal';
-    cityGeo=null;
+    console.log('省级GeoJSON加载失败，尝试阿里云API...',e);
+    // 降级：尝试阿里云API
+    try{
+      var r2=await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json');
+      if(!r2.ok)throw Error('');
+      chinaGeo=await r2.json();
+      currentZoom=1.0;
+      currentMode='province';
+      document.getElementById('modeProvince').style.fontWeight='600';
+      try{renderAll();}catch(e2){}
+      return;
+    }catch(e2){
+      console.log('GeoJSON全部加载失败，显示数据列表模式');
+      currentMode='city';
+      document.getElementById('modeCity').style.fontWeight='600';
+      document.getElementById('modeProvince').style.fontWeight='normal';
+      cityGeo=null;
+    }
   }
   try{renderAll();}catch(e){console.log('渲染异常:',e);}
 }
